@@ -51,16 +51,21 @@ async function getAllAgentes(req, res) {
 
 async function getAgenteById(req, res) {
     try {
-        const { id } = req.params;
-        const agente = await agentesRepository.findById(id);
-
-        if (!agente) {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
             return res.status(404).json({
                 status: 404,
                 message: 'Agente não encontrado'
             });
         }
-
+        const agente = await agentesRepository.findById(id);
+        if (!agente) {
+            
+            return res.status(404).json({
+                status: 404,
+                message: 'Agente não encontrado'
+            });
+        }
         res.status(200).json(agente);
     } catch (error) {
         res.status(500).json({

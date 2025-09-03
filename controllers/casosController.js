@@ -51,16 +51,20 @@ async function getAllCasos(req, res) {
 
 async function getCasoById(req, res) {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Caso não encontrado'
+            });
+        }
         const caso = await casosRepository.findById(id);
-
         if (!caso) {
             return res.status(404).json({
                 status: 404,
                 message: 'Caso não encontrado'
             });
         }
-
         res.status(200).json(caso);
     } catch (error) {
         res.status(500).json({
