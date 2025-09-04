@@ -210,11 +210,44 @@ async function deleteCaso(req, res) {
     }
 }
 
+async function getAgenteDoCaso(req, res) {
+    try {
+        const casoId = parseInt(req.params.caso_id, 10);
+        if (isNaN(casoId) || casoId <= 0) {
+            return res.status(400).json({
+                message: 'ID de caso inválido'
+            });
+        }
+
+        const caso = await casosRepository.findById(casoId);
+        if (!caso) {
+            return res.status(404).json({
+                message: 'Caso não encontrado'
+            });
+        }
+
+        const agente = await agentesRepository.findById(caso.agente_id);
+        if (!agente) {
+            return res.status(404).json({
+                message: 'Agente responsável não encontrado'
+            });
+        }
+
+        res.status(200).json(agente);
+    } catch (error) {
+        res.status(500).json({
+            message: 'Erro interno do servidor',
+            error: error.message
+        });
+    }
+}
+
 module.exports = {
     getAllCasos,
     getCasoById,
     createCaso,
     updateCaso,
     updateCasoPUT,
-    deleteCaso
+    deleteCaso,
+    getAgenteDoCaso
 };
