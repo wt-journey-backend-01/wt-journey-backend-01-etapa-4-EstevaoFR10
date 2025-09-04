@@ -83,11 +83,10 @@ class AuthController {
             const accessToken = jwt.sign(
                 {
                     id: usuario.id,
-                    nome: usuario.nome,
                     email: usuario.email
                 },
                 process.env.JWT_SECRET || "segredo",
-                { expiresIn: '1h' }
+                { expiresIn: '1d' }
             );
             
             res.status(200).json({
