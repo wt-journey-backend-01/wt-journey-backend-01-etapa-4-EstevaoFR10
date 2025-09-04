@@ -3,6 +3,7 @@ const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
 const authController = require('../controllers/authController');
 
-router.delete('/:id', authMiddleware, authController.deleteUser);
+// Rota para obter dados do usuário logado
+router.get('/me', authMiddleware, authController.me);
 
 module.exports = router;

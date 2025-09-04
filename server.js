@@ -6,7 +6,8 @@ const { errorHandler, notFoundHandler } = require('./utils/errorHandler');
 const agentesRoutes = require('./routes/agentesRoutes');
 const casosRoutes = require('./routes/casosRoutes');
 const authRoutes = require('./routes/authRoutes');
-// const usersRoutes = require('./routes/usersRoutes');
+const usersRoutes = require('./routes/usersRoutes');
+const usuariosRoutes = require('./routes/usuariosRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,7 +27,8 @@ app.get('/', (req, res) => {
             'POST /auth/register',
             'POST /auth/login',
             'POST /auth/logout',
-            'DELETE /users/:id'
+            'DELETE /users/:id',
+            'GET /usuarios/me'
         ]
     });
 });
@@ -35,7 +37,8 @@ app.get('/', (req, res) => {
 app.use('/agentes', agentesRoutes);
 app.use('/casos', casosRoutes);
 app.use('/auth', authRoutes);
-// app.use('/users', usersRoutes);
+app.use('/users', usersRoutes);
+app.use('/usuarios', usuariosRoutes);
 
 // Middleware para rotas não encontradas
 app.use(notFoundHandler);

@@ -125,6 +125,32 @@ class AuthController {
         });
     }
     
+    // Retornar dados do usuário logado
+    async me(req, res) {
+        try {
+            // req.user vem do middleware de autenticação
+            const usuario = await usuariosRepository.buscarPorId(req.user.id);
+            
+            if (!usuario) {
+                return res.status(404).json({
+                    erro: 'Usuário não encontrado'
+                });
+            }
+            
+            res.status(200).json({
+                id: usuario.id,
+                nome: usuario.nome,
+                email: usuario.email
+            });
+            
+        } catch (error) {
+            console.error('Erro ao buscar usuário:', error);
+            res.status(500).json({
+                erro: 'Erro interno do servidor'
+            });
+        }
+    }
+    
     // Deletar usuário
     async deleteUser(req, res) {
         try {
