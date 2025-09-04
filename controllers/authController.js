@@ -44,20 +44,29 @@ class AuthController {
             const senhaHash = await bcrypt.hash(senha, saltRounds);
             
             // Criar usuário
-            const novoUsuario = await usuariosRepository.criar({
-                nome,
-                email,
-                senha: senhaHash
-            });
-            
-            res.status(201).json({
-                message: 'Usuário criado com sucesso',
-                usuario: {
-                    id: novoUsuario.id,
-                    nome: novoUsuario.nome,
-                    email: novoUsuario.email
+            try {
+                const novoUsuario = await usuariosRepository.criar({
+                    nome,
+                    email,
+                    senha: senhaHash
+                });
+                
+                res.status(201).json({
+                    message: 'Usuário criado com sucesso',
+                    usuario: {
+                        id: novoUsuario.id,
+                        nome: novoUsuario.nome,
+                        email: novoUsuario.email
+                    }
+                });
+            } catch (error) {
+                if (error.message.includes('Email já está em uso')) {
+                    return res.status(400).json({
+                        erro: 'Email já está em uso'
+                    });
                 }
-            });
+                throw error; // Re-lança outros erros
+            }
             
         } catch (error) {
             console.error('Erro no registro:', error);

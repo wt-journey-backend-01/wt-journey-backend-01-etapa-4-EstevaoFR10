@@ -78,6 +78,17 @@ async function getAgenteById(req, res) {
     try {
         const dadosAgente = req.body;
 
+        // Validar se o payload está em formato correto
+        if (!dadosAgente || typeof dadosAgente !== 'object' || Array.isArray(dadosAgente) || Object.keys(dadosAgente).length === 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    payload: "O corpo da requisição não pode ser vazio e deve ser um objeto válido"
+                }
+            });
+        }
+
         // Verificar campos válidos
         const camposValidos = ['nome', 'dataDeIncorporacao', 'cargo'];
         const camposRecebidos = Object.keys(dadosAgente);
@@ -114,6 +125,17 @@ async function getAgenteById(req, res) {
                 message: "Parâmetros inválidos",
                 errors: {
                     dataDeIncorporacao: "Campo 'dataDeIncorporacao' deve estar no formato YYYY-MM-DD"
+                }
+            });
+        }
+
+        // Validação de cargo
+        if (dadosAgente.cargo && !['delegado', 'inspetor'].includes(dadosAgente.cargo)) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    cargo: "O campo 'cargo' pode ser somente 'delegado' ou 'inspetor'"
                 }
             });
         }
@@ -206,6 +228,17 @@ async function updateAgentePUT(req, res) {
             });
         }
 
+        // Validação de cargo
+        if (dadosAgente.cargo && !['delegado', 'inspetor'].includes(dadosAgente.cargo)) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    cargo: "O campo 'cargo' pode ser somente 'delegado' ou 'inspetor'"
+                }
+            });
+        }
+
         // Verificar se não é data futura
         const inputDate = new Date(dadosAgente.dataDeIncorporacao + 'T00:00:00');
         const today = new Date();
@@ -219,10 +252,8 @@ async function updateAgentePUT(req, res) {
                 }
             });
         }
-        
-        const agenteAtualizado = await agentesRepository.update(id, dadosAgente);
-        
-        if (!agenteAtualizado) {
+
+        const agenteAtualizado = await agentesRepository.update(id, dadosAgente);        if (!agenteAtualizado) {
             return res.status(404).json({ 
                 status: 404,
                 message: 'Agente não encontrado'
@@ -310,6 +341,17 @@ async function updateAgente(req, res) {
                     }
                 });
             }
+        }
+
+        // Validação de cargo
+        if (dadosAgente.cargo && !['delegado', 'inspetor'].includes(dadosAgente.cargo)) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    cargo: "O campo 'cargo' pode ser somente 'delegado' ou 'inspetor'"
+                }
+            });
         }
 
         // Validação básica de formato de data se fornecida

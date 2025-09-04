@@ -16,13 +16,27 @@ async function getAllCasos(req, res) {
             });
         }
         
-        // Validar agente_id se fornecido (deve ser número)
-        if (agente_id && isNaN(parseInt(agente_id))) {
+        // Validar agente_id se fornecido (deve ser número inteiro positivo)
+        if (agente_id) {
+            const agenteIdNum = parseInt(agente_id, 10);
+            if (isNaN(agenteIdNum) || agenteIdNum <= 0) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Parâmetros inválidos",
+                    errors: {
+                        agente_id: "O campo 'agente_id' deve ser um número válido e positivo"
+                    }
+                });
+            }
+        }
+        
+        // Validar parâmetro q se fornecido
+        if (q !== undefined && (typeof q !== 'string' || q.trim() === '')) {
             return res.status(400).json({
                 status: 400,
                 message: "Parâmetros inválidos",
                 errors: {
-                    agente_id: "O campo 'agente_id' deve ser um número válido"
+                    q: "O parâmetro de busca 'q' deve ser uma string não vazia"
                 }
             });
         }
@@ -108,6 +122,32 @@ async function createCaso(req, res) {
     try {
         const dadosCaso = req.body;
 
+        // Validar se o payload está em formato correto
+        if (!dadosCaso || typeof dadosCaso !== 'object' || Array.isArray(dadosCaso) || Object.keys(dadosCaso).length === 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    payload: "O corpo da requisição não pode ser vazio e deve ser um objeto válido"
+                }
+            });
+        }
+
+        // Verificar campos válidos
+        const camposValidos = ['titulo', 'descricao', 'status', 'agente_id'];
+        const camposRecebidos = Object.keys(dadosCaso);
+        const camposInvalidos = camposRecebidos.filter(campo => !camposValidos.includes(campo));
+        
+        if (camposInvalidos.length > 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    [camposInvalidos[0]]: `Campo '${camposInvalidos[0]}' não é permitido`
+                }
+            });
+        }
+
         // Validações básicas
         if (!dadosCaso.titulo || !dadosCaso.descricao || !dadosCaso.status || !dadosCaso.agente_id) {
             return res.status(400).json({
@@ -131,6 +171,20 @@ async function createCaso(req, res) {
                     status: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'"
                 }
             });
+        }
+
+        // Validar agente_id (deve ser número inteiro positivo)
+        if (dadosCaso.agente_id) {
+            const agenteIdNum = parseInt(dadosCaso.agente_id, 10);
+            if (isNaN(agenteIdNum) || agenteIdNum <= 0) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Parâmetros inválidos",
+                    errors: {
+                        agente_id: "O campo 'agente_id' deve ser um número válido e positivo"
+                    }
+                });
+            }
         }
 
         // Verificar se agente existe - retornar 404 se não existir
@@ -164,6 +218,32 @@ async function updateCasoPUT(req, res) {
         }
         
         const dadosCaso = req.body;
+
+        // Validar se o payload está em formato correto
+        if (!dadosCaso || typeof dadosCaso !== 'object' || Array.isArray(dadosCaso) || Object.keys(dadosCaso).length === 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    payload: "O corpo da requisição não pode ser vazio e deve ser um objeto válido"
+                }
+            });
+        }
+
+        // Verificar campos válidos
+        const camposValidos = ['titulo', 'descricao', 'status', 'agente_id'];
+        const camposRecebidos = Object.keys(dadosCaso);
+        const camposInvalidos = camposRecebidos.filter(campo => !camposValidos.includes(campo));
+        
+        if (camposInvalidos.length > 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    [camposInvalidos[0]]: `Campo '${camposInvalidos[0]}' não é permitido`
+                }
+            });
+        }
         
         // Verificar se está tentando alterar o ID
         if (dadosCaso.id !== undefined) {
@@ -199,6 +279,20 @@ async function updateCasoPUT(req, res) {
                     status: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'"
                 }
             });
+        }
+        
+        // Validar agente_id (deve ser número inteiro positivo)
+        if (dadosCaso.agente_id) {
+            const agenteIdNum = parseInt(dadosCaso.agente_id, 10);
+            if (isNaN(agenteIdNum) || agenteIdNum <= 0) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Parâmetros inválidos",
+                    errors: {
+                        agente_id: "O campo 'agente_id' deve ser um número válido e positivo"
+                    }
+                });
+            }
         }
         
         // Verificar se agente existe
