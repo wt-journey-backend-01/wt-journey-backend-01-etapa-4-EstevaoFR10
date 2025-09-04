@@ -2,9 +2,9 @@
 
 # 🧪 Relatório de Avaliação – Journey Levty Etapa 1 - EstevaoFR10
 
-**Data:** 04/09/2025 17:04
+**Data:** 04/09/2025 17:11
 
-**Nota Final:** `31.72/100`
+**Nota Final:** `39.80/100`
 **Status:** ❌ Reprovado
 
 ---
@@ -97,13 +97,7 @@
 - Nenhum item bônus foi identificado. Tente adicionar mais estilo e complexidade ao seu código nas próximas tentativas!
 
 ## ❌ Problemas Detectados (Descontos de até 100 pontos)
-- Foram encontrados `3` problemas que acarretam descontos. Veja abaixo os testes penalizados:
-  - ⚠️ **Falhou no teste de penalidade**: `Validation: Consegue criar um caso com título vazio`
-    - **Correção sugerida**: **Penalidade:** Sua API permitiu a criação de um caso com `titulo` vazio. Títulos são campos obrigatórios e não devem ser aceitos se estiverem em branco.
-  - ⚠️ **Falhou no teste de penalidade**: `Validation: Consegue criar um caso com descrição vazia`
-    - **Correção sugerida**: **Penalidade:** Sua API permitiu a criação de um caso com `descricao` vazia. Descrições são campos importantes e não devem ser aceitas se estiverem em branco.
-  - ⚠️ **Falhou no teste de penalidade**: `Validation: Consegue atualizar um caso com status que não seja 'aberto' ou 'solucionado'`
-    - **Correção sugerida**: **Penalidade:** Sua API permitiu a atualização de um caso com um `status` que não é 'aberto' ou 'solucionado'. O campo de status deve ter valores restritos. Implemente uma validação para garantir apenas os valores permitidos.
+- Nenhuma infração grave foi detectada. Muito bom nesse aspecto!
 
 ---
 Continue praticando e caprichando no código. Cada detalhe conta! 💪
