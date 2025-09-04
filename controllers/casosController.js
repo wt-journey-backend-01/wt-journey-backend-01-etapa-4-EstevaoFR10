@@ -1,38 +1,35 @@
 const casosRepository = require("../repositories/casosRepository");
 const agentesRepository = require("../repositories/agentesRepository");
-
-// Função para validar payload de caso
-function validarPayloadCaso(body, metodo = 'POST') {
-    const camposValidos = ['titulo', 'descricao', 'agente_id', 'status'];
-    const camposRecebidos = Object.keys(body);
-    
-    // Verificar se há campos extras
-    const camposExtras = camposRecebidos.filter(campo => !camposValidos.includes(campo));
-    if (camposExtras.length > 0) {
-        return `Campos inválidos: ${camposExtras.join(', ')}`;
-    }
-    
-    // Para POST e PUT, campos obrigatórios
-    if (metodo === 'POST' || metodo === 'PUT') {
-        const camposObrigatorios = ['titulo', 'descricao', 'agente_id'];
-        for (const campo of camposObrigatorios) {
-            if (!body[campo]) {
-                return `Campo obrigatório faltando: ${campo}`;
-            }
-        }
-    }
-    
-    // Validar status se fornecido
-    if (body.status && !['aberto', 'solucionado'].includes(body.status)) {
-        return 'Campo status deve ser "aberto" ou "solucionado"';
-    }
-    
-    return null; // tudo ok
-}
+const { validarPayloadCaso } = require("../utils/validators");
 
 async function getAllCasos(req, res) {
     try {
-        const casos = await casosRepository.findAll();
+        const { status, agente_id } = req.query;
+        
+        let casos;
+        if (status || agente_id) {
+            // Validar status se fornecido
+            if (status && !['aberto', 'solucionado'].includes(status)) {
+                return res.status(400).json({
+                    message: 'Campo status deve ser "aberto" ou "solucionado"'
+                });
+            }
+            
+            // Validar agente_id se fornecido
+            if (agente_id) {
+                const id = parseInt(agente_id, 10);
+                if (isNaN(id) || id <= 0) {
+                    return res.status(400).json({
+                        message: 'agente_id deve ser um número válido'
+                    });
+                }
+            }
+            
+            casos = await casosRepository.findWithFilters({ status, agente_id });
+        } else {
+            casos = await casosRepository.findAll();
+        }
+        
         res.status(200).json(casos);
     } catch (error) {
         res.status(500).json({

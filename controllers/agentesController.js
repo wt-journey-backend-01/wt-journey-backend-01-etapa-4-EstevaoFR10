@@ -1,38 +1,27 @@
 const agentesRepository = require("../repositories/agentesRepository");
-
-// Função para validar payload de agente
-function validarPayloadAgente(body, metodo = 'POST') {
-    const camposValidos = ['nome', 'dataDeIncorporacao', 'cargo'];
-    const camposRecebidos = Object.keys(body);
-    
-    // Verificar se há campos extras
-    const camposExtras = camposRecebidos.filter(campo => !camposValidos.includes(campo));
-    if (camposExtras.length > 0) {
-        return `Campos inválidos: ${camposExtras.join(', ')}`;
-    }
-    
-    // Para POST e PUT, todos os campos são obrigatórios
-    if (metodo === 'POST' || metodo === 'PUT') {
-        for (const campo of camposValidos) {
-            if (!body[campo]) {
-                return `Campo obrigatório faltando: ${campo}`;
-            }
-        }
-    }
-    
-    // Validar cargo se fornecido
-    if (body.cargo && !['delegado', 'inspetor'].includes(body.cargo)) {
-        return 'Campo cargo deve ser "delegado" ou "inspetor"';
-    }
-    
-    return null; // tudo ok
-}
+const { validarPayloadAgente } = require("../utils/validators");
 
 async function getAllAgentes(req, res) {
     try {
-        const agentes = await agentesRepository.findAll();
+        const { cargo } = req.query;
+        
+        let agentes;
+        if (cargo) {
+            // Validar cargo
+            if (!['delegado', 'inspetor'].includes(cargo)) {
+                return res.status(400).json({
+                    message: 'Campo cargo deve ser "delegado" ou "inspetor"'
+                });
+            }
+            agentes = await agentesRepository.findByCargo(cargo);
+        } else {
+            agentes = await agentesRepository.findAll();
+        }
+        
+        console.log('Agentes encontrados:', agentes?.length || 0);
         res.status(200).json(agentes);
     } catch (error) {
+        console.error('Erro ao buscar agentes:', error);
         res.status(500).json({
             message: 'Erro interno do servidor',
             error: error.message
@@ -70,12 +59,14 @@ async function createAgente(req, res) {
         // Validar payload
         const erroValidacao = validarPayloadAgente(req.body, 'POST');
         if (erroValidacao) {
+            console.log('Erro de validação:', erroValidacao);
             return res.status(400).json({
                 message: erroValidacao
             });
         }
         
         const { nome, dataDeIncorporacao, cargo } = req.body;
+        console.log('Criando agente:', { nome, dataDeIncorporacao, cargo });
         
         const novoAgente = await agentesRepository.create({
             nome,
@@ -83,8 +74,10 @@ async function createAgente(req, res) {
             cargo
         });
         
+        console.log('Agente criado:', novoAgente);
         res.status(201).json(novoAgente);
     } catch (error) {
+        console.error('Erro ao criar agente:', error);
         res.status(500).json({
             message: 'Erro interno do servidor',
             error: error.message

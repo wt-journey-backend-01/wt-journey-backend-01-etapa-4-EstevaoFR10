@@ -1,7 +1,14 @@
 const db = require('../db/db');
 
 async function findAll() {
-    return await db('agentes').select('*');
+    try {
+        const agentes = await db('agentes').select('*');
+        console.log('Repository findAll - agentes encontrados:', agentes?.length || 0);
+        return agentes;
+    } catch (error) {
+        console.error('Erro no repository findAll:', error);
+        throw error;
+    }
 }
 
 async function findById(id) {
@@ -9,19 +16,29 @@ async function findById(id) {
 }
 
 async function create(dadosAgente) {
-    const [novoAgente] = await db('agentes').insert(dadosAgente).returning('*');
-    return novoAgente;
+    try {
+        const [novoAgente] = await db('agentes').insert(dadosAgente).returning('*');
+        return novoAgente;
+    } catch (error) {
+        console.error('Erro ao criar agente:', error);
+        throw error;
+    }
 }
 
 async function update(id, dadosAgente) {
-    // Remover o campo 'id' dos dados a serem atualizados para proteger o ID
-    const { id: _, ...dadosLimpos } = dadosAgente;
-    
-    const [agenteAtualizado] = await db('agentes')
-        .where({ id })
-        .update(dadosLimpos)
-        .returning('*');
-    return agenteAtualizado;
+    try {
+        // Remover o campo 'id' dos dados a serem atualizados para proteger o ID
+        const { id: _, ...dadosLimpos } = dadosAgente;
+        
+        const [agenteAtualizado] = await db('agentes')
+            .where({ id })
+            .update(dadosLimpos)
+            .returning('*');
+        return agenteAtualizado;
+    } catch (error) {
+        console.error('Erro ao atualizar agente:', error);
+        throw error;
+    }
 }
 
 async function deleteById(id) {

@@ -15,19 +15,29 @@ async function findById(id) {
 }
 
 async function create(dadosCaso) {
-    const [novoCaso] = await db('casos').insert(dadosCaso).returning('*');
-    return novoCaso;
+    try {
+        const [novoCaso] = await db('casos').insert(dadosCaso).returning('*');
+        return novoCaso;
+    } catch (error) {
+        console.error('Erro ao criar caso:', error);
+        throw error;
+    }
 }
 
 async function update(id, dadosCaso) {
-    // Remover o campo 'id' dos dados a serem atualizados para proteger o ID
-    const { id: _, ...dadosLimpos } = dadosCaso;
-    
-    const [casoAtualizado] = await db('casos')
-        .where({ id })
-        .update(dadosLimpos)
-        .returning('*');
-    return casoAtualizado;
+    try {
+        // Remover o campo 'id' dos dados a serem atualizados para proteger o ID
+        const { id: _, ...dadosLimpos } = dadosCaso;
+        
+        const [casoAtualizado] = await db('casos')
+            .where({ id })
+            .update(dadosLimpos)
+            .returning('*');
+        return casoAtualizado;
+    } catch (error) {
+        console.error('Erro ao atualizar caso:', error);
+        throw error;
+    }
 }
 
 async function deleteById(id) {
@@ -100,7 +110,3 @@ module.exports = {
     search,
     findWithFilters
 };
-
-
-
-//comentario só pra mudar o arquivo pois voltei 1 commit
