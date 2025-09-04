@@ -25,14 +25,27 @@ async function createAgente(req, res) {
     try {
         const { nome, cargo } = req.body;
         
-        // Validação mínima para permitir testes de penalty passarem
-        if (!req.body || typeof req.body !== 'object') {
+        // Validações básicas obrigatórias
+        if (!nome || !cargo) {
+            return res.status(400).end();
+        }
+        
+        // Validação de tipos
+        if (typeof nome !== 'string' || typeof cargo !== 'string') {
+            return res.status(400).end();
+        }
+        
+        // Validação de campos extras
+        const camposPermitidos = ['nome', 'cargo'];
+        const camposRecebidos = Object.keys(req.body);
+        const camposExtras = camposRecebidos.filter(campo => !camposPermitidos.includes(campo));
+        if (camposExtras.length > 0) {
             return res.status(400).end();
         }
         
         const novoAgente = await agentesRepository.create({
-            nome: nome || '',
-            cargo: cargo || 'inspetor'
+            nome,
+            cargo
         });
         
         res.status(201).json(novoAgente);
@@ -45,7 +58,21 @@ async function updateAgentePUT(req, res) {
     try {
         const { nome, cargo } = req.body;
         
-        if (!req.body || typeof req.body !== 'object') {
+        // Validações básicas obrigatórias
+        if (!nome || !cargo) {
+            return res.status(400).end();
+        }
+        
+        // Validação de tipos
+        if (typeof nome !== 'string' || typeof cargo !== 'string') {
+            return res.status(400).end();
+        }
+        
+        // Validação de campos extras
+        const camposPermitidos = ['nome', 'cargo'];
+        const camposRecebidos = Object.keys(req.body);
+        const camposExtras = camposRecebidos.filter(campo => !camposPermitidos.includes(campo));
+        if (camposExtras.length > 0) {
             return res.status(400).end();
         }
         
@@ -55,8 +82,8 @@ async function updateAgentePUT(req, res) {
         }
         
         const agenteAtualizado = await agentesRepository.update(req.params.id, {
-            nome: nome || '',
-            cargo: cargo || 'inspetor'
+            nome,
+            cargo
         });
         
         res.status(200).json(agenteAtualizado);
