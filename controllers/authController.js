@@ -91,7 +91,7 @@ class AuthController {
             );
             
             res.status(200).json({
-                access_token: accessToken  // Corrigido: access_token (com "c")
+                access_token: accessToken
             });
             
         } catch (error) {
