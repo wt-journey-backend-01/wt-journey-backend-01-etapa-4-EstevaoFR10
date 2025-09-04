@@ -47,6 +47,13 @@ async function createAgente(req, res) {
             });
         }
         
+        // Validar cargo
+        if (!['delegado', 'inspetor'].includes(cargo)) {
+            return res.status(400).json({
+                message: 'Campo cargo deve ser "delegado" ou "inspetor"'
+            });
+        }
+        
         const novoAgente = await agentesRepository.create({
             nome,
             dataDeIncorporacao,
@@ -68,6 +75,47 @@ async function updateAgente(req, res) {
         if (isNaN(id)) {
             return res.status(404).json({
                 message: 'Agente não encontrado'
+            });
+        }
+        
+        const agenteAtualizado = await agentesRepository.update(id, req.body);
+        if (!agenteAtualizado) {
+            return res.status(404).json({
+                message: 'Agente não encontrado'
+            });
+        }
+        
+        res.status(200).json(agenteAtualizado);
+    } catch (error) {
+        res.status(500).json({
+            message: 'Erro interno do servidor',
+            error: error.message
+        });
+    }
+}
+
+async function updateAgentePUT(req, res) {
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            return res.status(404).json({
+                message: 'Agente não encontrado'
+            });
+        }
+        
+        const { nome, dataDeIncorporacao, cargo } = req.body;
+        
+        // PUT exige todos os campos obrigatórios
+        if (!nome || !dataDeIncorporacao || !cargo) {
+            return res.status(400).json({
+                message: 'Nome, dataDeIncorporacao e cargo são obrigatórios'
+            });
+        }
+        
+        // Validar cargo
+        if (!['delegado', 'inspetor'].includes(cargo)) {
+            return res.status(400).json({
+                message: 'Campo cargo deve ser "delegado" ou "inspetor"'
             });
         }
         
@@ -117,5 +165,6 @@ module.exports = {
     getAgenteById,
     createAgente,
     updateAgente,
+    updateAgentePUT,
     deleteAgente
 };

@@ -7,6 +7,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 router.get('/', authMiddleware, casosController.getAllCasos);
 router.get('/:id', authMiddleware, casosController.getCasoById);
 router.post('/', authMiddleware, casosController.createCaso);
+router.put('/:id', authMiddleware, casosController.updateCasoPUT);
 router.patch('/:id', authMiddleware, casosController.updateCaso);
 router.delete('/:id', authMiddleware, casosController.deleteCaso);
 

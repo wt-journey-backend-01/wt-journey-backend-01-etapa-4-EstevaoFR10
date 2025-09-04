@@ -53,6 +53,14 @@ class AuthController {
             
         } catch (error) {
             console.error('Erro no registro:', error);
+            
+            // Capturar erro específico de email duplicado
+            if (error.message.includes('Email já está em uso')) {
+                return res.status(400).json({
+                    message: 'Email já está em uso'
+                });
+            }
+            
             res.status(500).json({
                 message: 'Erro interno do servidor'
             });
