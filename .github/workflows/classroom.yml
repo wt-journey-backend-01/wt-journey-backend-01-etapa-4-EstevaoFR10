@@ -34,7 +34,7 @@ jobs:
         ports:
           - 5432:5432
     
-    if: github.actor != 'github-classroom[bot]' && github.actor != 'WebTech-Journey-Autograder[bot]' && github.actor != 'ArthurCRodrigues'
+    if: github.actor != 'github-classroom[bot]' && github.actor != 'WebTech-Journey-Autograder[bot]' 
 
     steps:
      
