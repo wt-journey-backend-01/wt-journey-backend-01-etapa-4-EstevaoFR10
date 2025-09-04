@@ -145,7 +145,14 @@ async function getAgenteById(req, res) {
 
 async function updateAgentePUT(req, res) {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id) || id <= 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Agente não encontrado'
+            });
+        }
+        
         const dadosAgente = req.body;
         
         // Verificar se está tentando alterar o ID
@@ -234,7 +241,14 @@ async function updateAgentePUT(req, res) {
 
 async function updateAgente(req, res) {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id) || id <= 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Agente não encontrado'
+            });
+        }
+        
         const dadosAgente = req.body;
 
         // Verificar se está tentando alterar o ID
@@ -347,7 +361,14 @@ async function updateAgente(req, res) {
 
 async function deleteAgente(req, res) {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id) || id <= 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Agente não encontrado'
+            });
+        }
+        
         const agenteDeletado = await agentesRepository.deleteById(id);
 
         if (!agenteDeletado) {

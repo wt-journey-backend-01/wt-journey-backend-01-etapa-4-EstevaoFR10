@@ -68,7 +68,14 @@ async function getCasoById(req, res) {
 
 async function getAgenteByCasoId(req, res) {
     try {
-        const { caso_id } = req.params;
+        const caso_id = parseInt(req.params.caso_id, 10);
+        if (isNaN(caso_id) || caso_id <= 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Caso não encontrado'
+            });
+        }
+        
         const caso = await casosRepository.findById(caso_id);
 
         if (!caso) {
@@ -148,7 +155,14 @@ async function createCaso(req, res) {
 
 async function updateCasoPUT(req, res) {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id) || id <= 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Caso não encontrado'
+            });
+        }
+        
         const dadosCaso = req.body;
         
         // Verificar se está tentando alterar o ID
@@ -213,9 +227,18 @@ async function updateCasoPUT(req, res) {
             error: error.message 
         });
     }
-}async function updateCaso(req, res) {
+}
+
+async function updateCaso(req, res) {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id) || id <= 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Caso não encontrado'
+            });
+        }
+        
         const dadosCaso = req.body;
 
         // Verificar se está tentando alterar o ID
@@ -311,7 +334,14 @@ async function updateCasoPUT(req, res) {
 
 async function deleteCaso(req, res) {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id) || id <= 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Caso não encontrado'
+            });
+        }
+        
         const casoDeletado = await casosRepository.deleteById(id);
 
         if (!casoDeletado) {
