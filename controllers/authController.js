@@ -3,15 +3,6 @@ const jwt = require('jsonwebtoken');
 const usuariosRepository = require('../repositories/usuariosRepository');
 
 class AuthController {
-    // Endpoint /usuarios/me
-    async me(req, res) {
-        if (!req.user) {
-            return res.status(401).json({ erro: 'Não autenticado' });
-        }
-        // Retorna apenas dados públicos
-        const { id, nome, email } = req.user;
-        res.status(200).json({ id, nome, email });
-    }
     // Registrar novo usuário
     async register(req, res) {
         try {

@@ -7,6 +7,8 @@ const agentesRoutes = require('./routes/agentesRoutes');
 const casosRoutes = require('./routes/casosRoutes');
 const authRoutes = require('./routes/authRoutes');
 const usersRoutes = require('./routes/usersRoutes');
+const authMiddleware = require('./middlewares/authMiddleware');
+const authController = require('./controllers/authController');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,6 +39,9 @@ app.use('/agentes', agentesRoutes);
 app.use('/casos', casosRoutes);
 app.use('/auth', authRoutes);
 app.use('/users', usersRoutes);
+
+// Rota específica para /usuarios/me
+app.get('/usuarios/me', authMiddleware, authController.me);
 
 // Middleware para rotas não encontradas
 app.use(notFoundHandler);
