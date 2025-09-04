@@ -1,269 +1,226 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 3 créditos restantes para usar o sistema de feedback AI.
+Você tem 2 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para EstevaoFR10:
 
-Nota final: **51.5/100**
+Nota final: **52.0/100**
 
-Olá, EstevaoFR10! 👋🚀
+Olá, EstevaoFR10! Tudo bem? 🚀
 
-Primeiramente, parabéns pelo esforço e dedicação até aqui! 🎉 Você já implementou várias funcionalidades importantes, como o registro, login, logout, proteção das rotas com JWT, hashing de senha com bcrypt, e a estrutura geral do projeto está muito bem organizada. Isso é fundamental para garantir uma aplicação segura e escalável. Além disso, você conseguiu passar os testes básicos de criação e autenticação de usuários, além da proteção das rotas, o que mostra que sua base está sólida! 👏👏
-
----
-
-### 🎯 Conquistas Bônus que você alcançou
-
-- Implementou o endpoint `/usuarios/me` para retornar dados do usuário autenticado com sucesso.
-- Criou filtros para casos e agentes, além de endpoints para buscar casos por agente e por status.
-- Aplicou mensagens de erro customizadas para IDs inválidos e casos não encontrados.
-- Organizou o projeto seguindo o padrão MVC, com controllers, repositories, middlewares e rotas bem divididos.
-
-Esses extras são um diferencial e mostram que você está indo além do básico! Continue assim! 🌟
+Antes de mais nada, parabéns pelo esforço e dedicação em construir uma API com autenticação, segurança e integração com PostgreSQL! 🎉 Você conseguiu fazer funcionar bem o cadastro, login, logout, exclusão de usuários e a proteção das rotas via JWT — isso é um baita avanço! 👏
 
 ---
 
-### 🚨 Testes que falharam e análise detalhada do motivo
+## 🎉 Pontos Fortes e Conquistas Bônus
 
-Vamos analisar os testes que falharam para entender o que pode estar acontecendo e como você pode corrigir.
+- Seu fluxo de autenticação está funcionando, com hashing de senha via **bcrypt** e geração de JWT com expiração correta.
+- O middleware de autenticação está implementado e aplicado corretamente nas rotas protegidas.
+- O endpoint `/usuarios/me` está funcionando e retorna os dados do usuário autenticado.
+- Você seguiu a estrutura MVC separando controllers, repositories, rotas e middlewares.
+- A documentação no `INSTRUCTIONS.md` está clara e detalhada, o que é ótimo para o uso da API.
+- Os testes básicos de usuários passaram, incluindo validações de senha e email.
+
+Esses pontos mostram que você entendeu bem o essencial da autenticação e segurança — parabéns! 🎯
 
 ---
 
-#### 1. `'USERS: Recebe erro 400 ao tentar criar um usuário com e-mail já em uso'`
+## 🚨 Análise dos Testes Que Falharam e Causas Raiz
 
-**O que o teste espera:**  
-Ao tentar registrar um usuário com um e-mail já cadastrado, o sistema deve retornar status 400 e uma mensagem de erro clara.
+### 1. Testes relacionados a **Agentes** e **Casos** (CRUD e validações)
 
-**O que seu código faz:**  
-No `authController.js`, no método `register`, você verifica se o e-mail já existe:
+Você teve falhas em praticamente todas as operações com agentes e casos:
+
+- Criar, listar, buscar por ID, atualizar (PUT e PATCH) e deletar agentes e casos.
+- Validações de payload incorreto (status 400).
+- Tratamento correto para IDs inválidos ou inexistentes (status 404).
+- Falha ao criar caso com agente inválido ou inexistente.
+- Falha ao proteger rotas sem token (status 401) — embora esses tenham passado, os demais não.
+
+**Por que isso aconteceu?**
+
+> Olhando seu código, os controllers de agentes e casos estão bem estruturados e fazem validações importantes. Porém, o que chama atenção é que você tem uma rota chamada `/users` em `server.js` que não está detalhada aqui, e também tem uma rota `/usuarios/me` que é separada.  
+> Além disso, a estrutura de rotas que você montou está de acordo, mas não vejo no seu projeto o arquivo `usersRoutes.js` (apesar de estar importado).  
+> Isso pode causar confusão e rotas mal configuradas, especialmente para a exclusão de usuários e proteção das rotas de agentes e casos.
+
+Além disso, a forma como você está validando os IDs (usando `parseInt` e checando `isNaN`) está correta, mas não vi validações explícitas para payloads incorretos em agentes e casos, por exemplo:
+
+- No `createAgente`, você valida os campos obrigatórios, mas no `updateAgente` (PATCH) não há validação do payload para evitar campos extras ou inválidos.
+- O mesmo vale para casos.
+  
+Essa falta de validação do corpo da requisição pode fazer com que os testes que enviam payloads incorretos falhem.
+
+### 2. Erro no campo do token JWT no login
+
+No seu `authController.js`, no método `login`, você retorna o token com a chave `acess_token` (sem o "c"):
 
 ```js
-const usuarioExistente = await usuariosRepository.buscarPorEmail(email);
-if (usuarioExistente) {
-    return res.status(400).json({
-        message: 'Email já está em uso'
-    });
+res.status(200).json({
+    acess_token: accessToken  // Note: "acess_token" conforme README (sem "c")
+});
+```
+
+Porém, no `INSTRUCTIONS.md`, no exemplo de resposta do login, está escrito corretamente como `access_token` (com "c"):
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-Porém, no `usuariosRepository.js`, o método `criar` também lança um erro caso tente inserir um e-mail duplicado:
+Essa discrepância pode causar falhas em testes que esperam o nome correto do campo, pois a maioria dos padrões e bibliotecas usam `access_token`. Essa diferença sutil pode quebrar a integração.
+
+**Sugestão:** Padronize para `access_token` em todo o projeto para evitar confusão.
+
+### 3. Estrutura de diretórios e rotas inconsistentes
+
+No seu `server.js`, você importa e usa uma rota `/users`:
 
 ```js
-async criar(dadosUsuario) {
-    try {
-        const [usuario] = await db('usuarios')
-            .insert(dadosUsuario)
-            .returning(['id', 'nome', 'email', 'created_at']);
-        return usuario;
-    } catch (error) {
-        if (error.code === '23505') { // Violação de unique constraint
-            throw new Error('Email já está em uso');
+const usersRoutes = require('./routes/usersRoutes');
+app.use('/users', usersRoutes);
+```
+
+Porém, no seu projeto não há o arquivo `routes/usersRoutes.js` detalhado aqui, e no `project_structure.txt` aparece também um `usuariosRoutes.js`.
+
+Isso pode indicar que:
+
+- Você tem rotas duplicadas ou mal nomeadas (`usersRoutes` vs `usuariosRoutes`).
+- A exclusão de usuário está na rota `/users/:id`, mas no `authController` o método `deleteUser` está implementado, porém não vi o roteamento explícito para essa função.
+
+Essa confusão pode fazer com que as rotas de exclusão de usuário não funcionem corretamente, afetando testes que dependem disso.
+
+### 4. Falta de validação rigorosa no payload (campos extras ou faltantes)
+
+Os testes que falharam indicam que seu código não está tratando adequadamente payloads com campos extras ou faltantes para agentes e casos, retornando 400 quando necessário.
+
+Por exemplo, no `createAgente` você verifica apenas os campos obrigatórios, mas não impede que venha um campo extra, o que pode ser um requisito dos testes.
+
+O mesmo ocorre para atualização parcial (PATCH), que deve validar os campos recebidos.
+
+---
+
+## Exemplos de melhorias práticas para os pontos acima
+
+### Corrigir o nome do campo do token no login (padronizar para `access_token`)
+
+No seu `authController.js`, altere:
+
+```js
+res.status(200).json({
+    access_token: accessToken
+});
+```
+
+Assim você evita confusão e garante que os testes que esperam `access_token` passem.
+
+---
+
+### Validar payloads com campos extras ou ausentes
+
+Você pode criar um middleware de validação ou usar bibliotecas como Joi ou celebrate para validar o corpo da requisição. Para algo simples, no controller você pode fazer:
+
+```js
+function validarCamposAgente(body) {
+    const camposValidos = ['nome', 'dataDeIncorporacao', 'cargo'];
+    const camposRecebidos = Object.keys(body);
+
+    // Verificar se há campos extras
+    const camposExtras = camposRecebidos.filter(campo => !camposValidos.includes(campo));
+    if (camposExtras.length > 0) {
+        return `Campos inválidos: ${camposExtras.join(', ')}`;
+    }
+
+    // Verificar se campos obrigatórios estão presentes
+    for (const campo of camposValidos) {
+        if (!body[campo]) {
+            return `Campo obrigatório faltando: ${campo}`;
         }
-        throw new Error(`Erro ao criar usuário: ${error.message}`);
     }
+
+    return null; // tudo ok
 }
 ```
 
-**Possível causa do problema:**  
-O teste pode estar esperando que, ao tentar criar um usuário com e-mail duplicado, o status 400 seja retornado diretamente pelo controller, mas seu `usuariosRepository.criar` lança uma exceção, que pode não estar sendo capturada adequadamente para retornar o status correto.
-
-**Como melhorar:**  
-No seu `authController.register`, você já verifica a existência do e-mail, o que é ótimo. Porém, para evitar falhas caso haja concorrência (dois registros ao mesmo tempo), você deve capturar o erro lançado pelo repository e tratar especificamente o erro de e-mail duplicado para retornar o status 400.
-
-Exemplo de tratamento no controller:
+E usar isso dentro do `createAgente` e `updateAgentePUT`:
 
 ```js
-try {
-    // ... código de criação
-} catch (error) {
-    if (error.message.includes('Email já está em uso')) {
-        return res.status(400).json({ message: error.message });
-    }
-    res.status(500).json({ message: 'Erro interno do servidor' });
+const erroValidacao = validarCamposAgente(req.body);
+if (erroValidacao) {
+    return res.status(400).json({ message: erroValidacao });
 }
 ```
 
-Assim, o erro será tratado corretamente, e o teste deve passar.
-
 ---
 
-#### 2. Testes relacionados a agentes (AGENTS):
+### Ajustar rotas de usuários para evitar confusão
 
-- Criação, listagem, busca por ID, atualização (PUT e PATCH), deleção, e erros para payload incorreto ou IDs inválidos.
-- Também falha ao tentar atualizar ou deletar agentes sem token JWT (status 401).
+No seu `server.js`, revise as importações e uso das rotas:
 
-**O que seu código faz bem:**  
-- Você aplicou o middleware de autenticação corretamente nas rotas de agentes (`agentesRoutes.js`).
-- Os controllers fazem validações básicas para IDs inválidos e checam se o agente existe.
-- Os status retornados estão de acordo para sucesso e erros.
+- Se você usa `/users` para exclusão, garanta que o arquivo `routes/usersRoutes.js` exista e tenha o endpoint DELETE `/users/:id` chamando `authController.deleteUser`.
+- Se você tem `/usuarios/me` para pegar dados do usuário logado, mantenha essa rota separada e protegida.
+- Evite duplicidade entre `/users` e `/usuarios` para facilitar manutenção.
 
-**Possíveis causas para as falhas:**
-
-- **Status 400 para payload incorreto:**  
-  Seu controller verifica se os campos obrigatórios existem em `createAgente`, mas não parece haver validação rigorosa para o formato ou campos extras. Por exemplo, não há validação para impedir campos extras ou validar o tipo dos dados enviados.
-
-- **Status 401 para falta de token:**  
-  Isso está correto, pois você usa o middleware `authMiddleware` que retorna 401 se o token não está presente ou inválido.
-
-- **Status 404 para ID inválido:**  
-  Você faz parseInt e checa se é NaN, retornando 404, o que está correto.
-
-**Sugestão para melhorar:**  
-- Adicione validações mais rigorosas nos controllers para verificar se o payload contém somente os campos esperados e se os tipos são válidos. Para isso, você pode usar bibliotecas como `Joi` ou criar funções de validação manualmente.
-- Garanta que os métodos PUT (atualização completa) validem todos os campos obrigatórios e que PATCH (atualização parcial) validem os campos fornecidos.
-
----
-
-#### 3. Testes relacionados a casos (CASES):
-
-- Criação, listagem, busca, atualização, deleção e erros ao criar com ID de agente inválido ou inexistente.
-- Falha ao criar caso sem token JWT (status 401).
-
-**O que seu código faz bem:**  
-- Middleware de autenticação aplicado nas rotas de casos.
-- Validação básica dos campos obrigatórios na criação (`titulo`, `descricao`, `agente_id`).
-- Verificação de ID inválido e caso inexistente com status 404.
-
-**Possíveis causas para as falhas:**
-
-- **Status 404 ao criar caso com agente_id inválido ou inexistente:**  
-  No seu `casosController.createCaso`, você valida os campos, mas não há validação explícita para checar se o `agente_id` realmente existe na tabela `agentes`. Isso pode estar causando o erro esperado pelo teste.
-
-- **Status 401 ao criar caso sem token:**  
-  Está correto, o middleware está protegendo as rotas.
-
-**Como corrigir:**  
-Antes de criar o caso, verifique se o agente existe:
+Exemplo simples de `routes/usersRoutes.js`:
 
 ```js
-const agente = await agentesRepository.findById(agente_id);
-if (!agente) {
-    return res.status(404).json({ message: 'Agente não encontrado' });
-}
-```
+const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/authController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-Isso garante que o agente existe antes de criar o caso e atende ao requisito do teste.
+router.delete('/:id', authMiddleware, authController.deleteUser);
 
----
-
-#### 4. Testes bônus falharam (filtros e buscas avançadas):
-
-- Filtragem por status, agente, keywords, ordenação por data, mensagens customizadas, endpoint `/usuarios/me`.
-
-**O que seu código já tem:**  
-- Você implementou o endpoint `/usuarios/me` (passou).
-- Implementou funções no repository para filtros e buscas.
-- Porém, não recebi no código enviado as rotas ou controllers que aplicam esses filtros ou fazem buscas por keywords.
-
-**Possível causa:**  
-Faltam endpoints específicos para filtros e buscas, ou eles não estão totalmente integrados com as rotas/controles.
-
-**Como melhorar:**  
-- Crie endpoints específicos para filtragem e busca, por exemplo:
-
-```js
-// Em casosRoutes.js
-router.get('/search', authMiddleware, casosController.searchCasos);
-
-// Em casosController.js
-async function searchCasos(req, res) {
-    const { status, agente_id, q } = req.query;
-    const casos = await casosRepository.findWithFilters({ status, agente_id, q });
-    res.status(200).json(casos);
-}
-```
-
-- Implemente mensagens de erro customizadas para argumentos inválidos, retornando status 400 com mensagens claras.
-
----
-
-### 🗂️ Sobre a Estrutura de Diretórios
-
-Sua estrutura está muito próxima do esperado e organizada:
-
-- `routes/` contém as rotas principais, incluindo `authRoutes.js`.
-- `controllers/` e `repositories/` estão bem separados.
-- Middleware de autenticação está na pasta correta.
-- Arquivos `server.js`, `.env`, `knexfile.js` e `INSTRUCTIONS.md` estão presentes.
-
-**Pequena observação:**  
-No seu `server.js`, você importa uma rota `usersRoutes` que não estava especificada no enunciado, e também tem uma rota `/usuarios/me`. Certifique-se que as rotas estejam coerentes e que não haja duplicidade ou confusão entre `/users` e `/usuarios`. Isso pode causar inconsistência na API e dificultar os testes.
-
----
-
-### Exemplos práticos para correção
-
-**Tratamento de erro para e-mail duplicado no registro:**
-
-```js
-// authController.js - register
-try {
-    // código de criação do usuário
-} catch (error) {
-    if (error.message.includes('Email já está em uso')) {
-        return res.status(400).json({ message: error.message });
-    }
-    res.status(500).json({ message: 'Erro interno do servidor' });
-}
-```
-
-**Validação de agente existente antes de criar caso:**
-
-```js
-// casosController.js - createCaso
-const agente = await agentesRepository.findById(agente_id);
-if (!agente) {
-    return res.status(404).json({ message: 'Agente não encontrado' });
-}
-```
-
-**Exemplo de endpoint para busca filtrada de casos:**
-
-```js
-// routes/casosRoutes.js
-router.get('/search', authMiddleware, casosController.searchCasos);
-
-// controllers/casosController.js
-async function searchCasos(req, res) {
-    try {
-        const { status, agente_id, q } = req.query;
-        const casos = await casosRepository.findWithFilters({ status, agente_id, q });
-        res.status(200).json(casos);
-    } catch (error) {
-        res.status(500).json({ message: 'Erro interno do servidor' });
-    }
-}
+module.exports = router;
 ```
 
 ---
 
-### 📚 Recursos recomendados para você:
+## Recursos para você aprofundar e corrigir os pontos
 
-- Para entender melhor autenticação, JWT e bcrypt, assista a este vídeo feito pelos meus criadores, que explica muito bem os conceitos fundamentais: https://www.youtube.com/watch?v=Q4LQOfYwujk  
-- Para aprofundar no uso prático do JWT, este vídeo é excelente: https://www.youtube.com/watch?v=keS0JWOypIU  
-- Para entender melhor a integração com bcrypt e JWT no Node.js: https://www.youtube.com/watch?v=L04Ln97AwoY  
-- Para aprimorar a estruturação do projeto em MVC e boas práticas de organização: https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s  
-- Se precisar reforçar a configuração do banco com Docker e Knex, recomendo: https://www.youtube.com/watch?v=uEABDBQV-Ek&t=1s e https://www.youtube.com/watch?v=dXWy_aGCW1E  
-
----
-
-### 📝 Resumo rápido do que focar para melhorar:
-
-- Trate erros lançados pelo repository no controller, especialmente para e-mail duplicado, para retornar status 400 corretamente.
-- Adicione validações mais rigorosas nos payloads de criação e atualização de agentes e casos (campos obrigatórios, tipos, campos extras).
-- Valide explicitamente a existência do `agente_id` antes de criar ou atualizar casos.
-- Implemente endpoints para filtros e buscas avançadas de casos e agentes, integrando-os nas rotas e controllers.
-- Revise a consistência das rotas `/users` e `/usuarios` para evitar confusão.
-- Garanta mensagens de erro claras e status HTTP corretos para todos os casos de falha.
-- Continue organizando o código seguindo a arquitetura MVC e mantendo o middleware de autenticação aplicado nas rotas protegidas.
+- Para validar payloads e estruturar controllers com validação: https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s (Boas práticas e arquitetura MVC)
+- Para autenticação com JWT e bcrypt, uso correto e segurança: https://www.youtube.com/watch?v=Q4LQOfYwujk (Feito pelos meus criadores, explica bem a segurança)
+- Para entender melhor o uso do JWT na prática: https://www.youtube.com/watch?v=keS0JWOypIU
+- Para Knex e migrations, caso precise revisar: https://www.youtube.com/watch?v=dXWy_aGCW1E
 
 ---
 
-EstevaoFR10, seu trabalho está muito bom e mostra que você já domina vários conceitos importantes! 💪 O que falta é aprofundar um pouco mais nas validações e tratamento de erros, além de completar os filtros avançados para ganhar aquela nota extra. Continue firme, corrigindo esses pontos e estudando os recursos que recomendei. Você está no caminho certo para se tornar um desenvolvedor Node.js especialista! 🚀
+## Análise de alguns testes específicos que falharam
 
-Se precisar de ajuda para implementar qualquer uma dessas melhorias, estou aqui para te ajudar! 😉
+### Teste: "AGENTS: Cria agentes corretamente com status code 201 e os dados inalterados do agente mais seu ID"
 
-Um abraço e bons códigos! 👨‍💻✨
+- Possível motivo: Falta de validação dos campos extras ou payload inválido.
+- Seu método `createAgente` aceita o payload, mas não rejeita campos extras. Isso pode causar falha no teste.
+
+### Teste: "CASES: Recebe status code 404 ao tentar criar caso com ID de agente inexistente"
+
+- Seu código já faz essa validação, então verifique se o ID do agente está sendo validado como número antes da consulta.
+- Se o ID do agente for inválido (ex: string não numérica), você deve retornar 404 ou 400 conforme especificado.
+
+### Teste: "USERS: JWT retornado no login possui data de expiração válida"
+
+- Passou! Isso mostra que o token está sendo gerado com `expiresIn: '1h'` corretamente.
+
+---
+
+## Resumo Final para Você Focar 🚀
+
+- **Padronize o nome do campo do token JWT no login para `access_token`** (com "c").
+- **Valide rigorosamente os payloads para agentes e casos**, rejeitando campos extras e verificando campos obrigatórios, tanto no POST quanto no PUT/PATCH.
+- **Revise a estrutura das rotas de usuários**, garantindo que o arquivo `usersRoutes.js` exista e que as rotas estejam consistentes e protegidas.
+- **Valide os IDs recebidos nas rotas**, retornando 400 para IDs inválidos (não numéricos) e 404 para IDs inexistentes.
+- **Mantenha a estrutura de diretórios conforme especificado**, evitando rotas e arquivos duplicados ou confusos (`usersRoutes` vs `usuariosRoutes`).
+- Continue mantendo a documentação clara e o código organizado — isso é um diferencial!
+
+---
+
+## Finalizando
+
+EstevaoFR10, você está no caminho certo! 💪 Muitas vezes, os detalhes de validação e padronização fazem toda a diferença para passar nos testes automatizados e entregar uma API robusta. Continue revisando seu código com calma, testando cada endpoint com diferentes cenários.
+
+Se precisar, volte aos vídeos recomendados para reforçar conceitos de autenticação, validação e organização do projeto. E claro, conte comigo para te ajudar a destravar esses detalhes! 🚀
+
+Um abraço e sucesso na jornada! 👊✨
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
