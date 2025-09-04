@@ -3,10 +3,8 @@ const db = require('../db/db');
 async function findAll() {
     try {
         const agentes = await db('agentes').select('*');
-        console.log('Repository findAll - agentes encontrados:', agentes?.length || 0);
         return agentes;
     } catch (error) {
-        console.error('Erro no repository findAll:', error);
         throw error;
     }
 }

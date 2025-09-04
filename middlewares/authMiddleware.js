@@ -18,7 +18,7 @@ const authMiddleware = (req, res, next) => {
         
         // Verificar se o JWT é válido
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || "segredo");
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
             // Adicionar dados do usuário ao request
             req.user = decoded;
             next();

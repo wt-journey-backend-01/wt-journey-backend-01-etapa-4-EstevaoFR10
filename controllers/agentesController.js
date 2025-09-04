@@ -2,7 +2,7 @@ const agentesRepository = require('../repositories/agentesRepository');
 
 async function getAllAgentes(req, res) {
     try {
-        const agentes = await agentesRepository.getAll();
+        const agentes = await agentesRepository.findAll();
         res.status(200).json(agentes);
     } catch (error) {
         res.status(500).end();
@@ -23,19 +23,20 @@ async function getAgenteById(req, res) {
 
 async function createAgente(req, res) {
     try {
+        if (!req.body || typeof req.body !== 'object') {
+            return res.status(400).end();
+        }
+        
         const { nome, cargo } = req.body;
         
-        // Validações básicas obrigatórias
         if (!nome || !cargo) {
             return res.status(400).end();
         }
         
-        // Validação de tipos
         if (typeof nome !== 'string' || typeof cargo !== 'string') {
             return res.status(400).end();
         }
         
-        // Validação de campos extras
         const camposPermitidos = ['nome', 'cargo'];
         const camposRecebidos = Object.keys(req.body);
         const camposExtras = camposRecebidos.filter(campo => !camposPermitidos.includes(campo));
