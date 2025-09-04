@@ -7,7 +7,7 @@ const authMiddleware = (req, res, next) => {
         
         if (!authHeader) {
             return res.status(401).json({ 
-                erro: 'Token de acesso requerido' 
+                message: 'Token de acesso requerido' 
             });
         }
         
@@ -16,7 +16,7 @@ const authMiddleware = (req, res, next) => {
         
         if (!token) {
             return res.status(401).json({ 
-                erro: 'Formato de token inválido' 
+                message: 'Formato de token inválido' 
             });
         }
         
@@ -28,20 +28,8 @@ const authMiddleware = (req, res, next) => {
         
         next();
     } catch (error) {
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({ 
-                erro: 'Token inválido' 
-            });
-        }
-        
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ 
-                erro: 'Token expirado' 
-            });
-        }
-        
-        return res.status(500).json({ 
-            erro: 'Erro interno do servidor' 
+        return res.status(401).json({ 
+            message: 'Token inválido' 
         });
     }
 };

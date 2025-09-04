@@ -1,34 +1,28 @@
-# Instruções para Configuração e Execução
+# Instruções de Uso da API
 
-## 1. Configurar o banco de dados PostgreSQL com Docker
-- Execute o comando para subir o container:
+## Configuração Inicial
+
+### 1. Configurar o banco de dados PostgreSQL com Docker
 ```bash
 docker-compose up -d
 ```
 
-## 2. Executar migrations
-- Para criar as tabelas no banco de dados:
+### 2. Executar migrations
 ```bash
 npx knex migrate:latest
 ```
 
-## 3. Rodar seeds
-- Para popular as tabelas com dados iniciais:
+### 3. Rodar seeds (opcional)
 ```bash
 npx knex seed:run
 ```
 
-## 4. Iniciar a aplicação
+### 4. Iniciar a aplicação
 ```bash
 npm start
 ```
 
-## Scripts adicionais
-- `npm run db:reset` - Derruba, recria, migra e popula o banco automaticamente
-
----
-
-## 🔐 Autenticação e Autorização
+## 🔐 Autenticação
 
 ### Registro de Usuário
 **Endpoint:** `POST /auth/register`
@@ -37,7 +31,7 @@ npm start
 ```json
 {
   "nome": "João Silva",
-  "email": "joao@exemplo.com",
+  "email": "joao@exemplo.com", 
   "senha": "MinhaSenh@123"
 }
 ```
@@ -48,6 +42,74 @@ npm start
 - Pelo menos 1 letra maiúscula  
 - Pelo menos 1 número
 - Pelo menos 1 caractere especial (@$!%*?&)
+
+### Login de Usuário
+**Endpoint:** `POST /auth/login`
+
+**Exemplo de requisição:**
+```json
+{
+  "email": "joao@exemplo.com",
+  "senha": "MinhaSenh@123"
+}
+```
+
+**Resposta de sucesso:**
+```json
+{
+  "acess_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### Logout de Usuário
+**Endpoint:** `POST /auth/logout`
+
+### Obter dados do usuário logado
+**Endpoint:** `GET /usuarios/me`
+
+### Deletar usuário
+**Endpoint:** `DELETE /users/:id`
+
+## 🔒 Rotas Protegidas
+
+Todas as rotas de `/agentes` e `/casos` requerem autenticação.
+
+### Como usar o token JWT
+
+Inclua o token no header `Authorization` de todas as requisições protegidas:
+
+```
+Authorization: Bearer SEU_TOKEN_JWT_AQUI
+```
+
+**Exemplo com curl:**
+```bash
+curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+     http://localhost:3000/agentes
+```
+
+## 📋 Endpoints de Agentes (Protegidos)
+
+- `GET /agentes` - Listar todos os agentes
+- `GET /agentes/:id` - Obter agente específico
+- `POST /agentes` - Criar novo agente
+- `PATCH /agentes/:id` - Atualizar agente
+- `DELETE /agentes/:id` - Deletar agente
+
+## 📋 Endpoints de Casos (Protegidos)
+
+- `GET /casos` - Listar todos os casos
+- `GET /casos/:id` - Obter caso específico
+- `POST /casos` - Criar novo caso
+- `PATCH /casos/:id` - Atualizar caso
+- `DELETE /casos/:id` - Deletar caso
+
+## Fluxo de Autenticação Esperado
+
+1. **Registrar** um usuário em `/auth/register`
+2. **Fazer login** em `/auth/login` para obter o token JWT
+3. **Usar o token** no header `Authorization: Bearer <token>` em todas as requisições protegidas
+4. O token expira em 1 hora - será necessário fazer login novamente
 
 **Resposta de sucesso (201):**
 ```json

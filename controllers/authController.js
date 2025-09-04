@@ -11,15 +11,7 @@ class AuthController {
             // Validações básicas
             if (!nome || !email || !senha) {
                 return res.status(400).json({
-                    erro: 'Nome, email e senha são obrigatórios'
-                });
-            }
-            
-            // Validação de email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                return res.status(400).json({
-                    erro: 'Email deve ter um formato válido'
+                    message: 'Nome, email e senha são obrigatórios'
                 });
             }
             
@@ -27,7 +19,7 @@ class AuthController {
             const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
             if (!senhaRegex.test(senha)) {
                 return res.status(400).json({
-                    erro: 'A senha deve ter no mínimo 8 caracteres, incluindo pelo menos uma letra minúscula, uma maiúscula, um número e um caractere especial'
+                    message: 'A senha deve ter no mínimo 8 caracteres, incluindo pelo menos uma letra minúscula, uma maiúscula, um número e um caractere especial'
                 });
             }
             
@@ -35,7 +27,7 @@ class AuthController {
             const usuarioExistente = await usuariosRepository.buscarPorEmail(email);
             if (usuarioExistente) {
                 return res.status(400).json({
-                    erro: 'Email já está em uso'
+                    message: 'Email já está em uso'
                 });
             }
             
@@ -44,34 +36,25 @@ class AuthController {
             const senhaHash = await bcrypt.hash(senha, saltRounds);
             
             // Criar usuário
-            try {
-                const novoUsuario = await usuariosRepository.criar({
-                    nome,
-                    email,
-                    senha: senhaHash
-                });
-                
-                res.status(201).json({
-                    message: 'Usuário criado com sucesso',
-                    usuario: {
-                        id: novoUsuario.id,
-                        nome: novoUsuario.nome,
-                        email: novoUsuario.email
-                    }
-                });
-            } catch (error) {
-                if (error.message.includes('Email já está em uso')) {
-                    return res.status(400).json({
-                        erro: 'Email já está em uso'
-                    });
+            const novoUsuario = await usuariosRepository.criar({
+                nome,
+                email,
+                senha: senhaHash
+            });
+            
+            res.status(201).json({
+                message: 'Usuário criado com sucesso',
+                usuario: {
+                    id: novoUsuario.id,
+                    nome: novoUsuario.nome,
+                    email: novoUsuario.email
                 }
-                throw error; // Re-lança outros erros
-            }
+            });
             
         } catch (error) {
             console.error('Erro no registro:', error);
             res.status(500).json({
-                erro: 'Erro interno do servidor'
+                message: 'Erro interno do servidor'
             });
         }
     }
@@ -84,7 +67,7 @@ class AuthController {
             // Validações básicas
             if (!email || !senha) {
                 return res.status(400).json({
-                    erro: 'Email e senha são obrigatórios'
+                    message: 'Email e senha são obrigatórios'
                 });
             }
             
@@ -92,7 +75,7 @@ class AuthController {
             const usuario = await usuariosRepository.buscarPorEmail(email);
             if (!usuario) {
                 return res.status(401).json({
-                    erro: 'Credenciais inválidas'
+                    message: 'Credenciais inválidas'
                 });
             }
             
@@ -100,11 +83,11 @@ class AuthController {
             const senhaValida = await bcrypt.compare(senha, usuario.senha);
             if (!senhaValida) {
                 return res.status(401).json({
-                    erro: 'Credenciais inválidas'
+                    message: 'Credenciais inválidas'
                 });
             }
             
-            // Gerar JWT (access token)
+            // Gerar JWT (access token) - conforme especificado no README
             const accessToken = jwt.sign(
                 {
                     id: usuario.id,
@@ -112,17 +95,17 @@ class AuthController {
                     email: usuario.email
                 },
                 process.env.JWT_SECRET,
-                { expiresIn: '1h' } // Token de 1 hora
+                { expiresIn: '1h' }
             );
             
             res.status(200).json({
-                access_token: accessToken
+                acess_token: accessToken  // Note: "acess_token" conforme README (sem "c")
             });
             
         } catch (error) {
             console.error('Erro no login:', error);
             res.status(500).json({
-                erro: 'Erro interno do servidor'
+                message: 'Erro interno do servidor'
             });
         }
     }
@@ -137,12 +120,11 @@ class AuthController {
     // Retornar dados do usuário logado
     async me(req, res) {
         try {
-            // req.user vem do middleware de autenticação
             const usuario = await usuariosRepository.buscarPorId(req.user.id);
             
             if (!usuario) {
                 return res.status(404).json({
-                    erro: 'Usuário não encontrado'
+                    message: 'Usuário não encontrado'
                 });
             }
             
@@ -155,7 +137,7 @@ class AuthController {
         } catch (error) {
             console.error('Erro ao buscar usuário:', error);
             res.status(500).json({
-                erro: 'Erro interno do servidor'
+                message: 'Erro interno do servidor'
             });
         }
     }
@@ -165,23 +147,28 @@ class AuthController {
         try {
             const id = parseInt(req.params.id, 10);
             if (isNaN(id)) {
-                return res.status(404).json({ erro: 'Usuário não encontrado' });
+                return res.status(404).json({ 
+                    message: 'Usuário não encontrado' 
+                });
             }
+            
             // Verificar se o usuário existe
             const usuario = await usuariosRepository.buscarPorId(id);
             if (!usuario) {
-                return res.status(404).json({ erro: 'Usuário não encontrado' });
+                return res.status(404).json({ 
+                    message: 'Usuário não encontrado' 
+                });
             }
+            
             // Deletar usuário
-            const deletado = await usuariosRepository.deletar(id);
-            if (deletado) {
-                return res.status(204).send();
-            } else {
-                res.status(500).json({ erro: 'Erro ao deletar usuário' });
-            }
+            await usuariosRepository.deletar(id);
+            res.status(204).send();
+            
         } catch (error) {
             console.error('Erro ao deletar usuário:', error);
-            res.status(500).json({ erro: 'Erro interno do servidor' });
+            res.status(500).json({ 
+                message: 'Erro interno do servidor' 
+            });
         }
     }
 }
