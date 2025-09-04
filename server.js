@@ -55,7 +55,7 @@ async function startServer() {
         await db.raw('SELECT 1');
         console.log('✅ Conexão com banco estabelecida');
         
-        app.listen(PORT, '0.0.0.0', () => {
+        app.listen(PORT, () => {
             console.log(`Servidor do Departamento de Polícia rodando em localhost:${PORT}`);
         });
     } catch (error) {
