@@ -48,6 +48,22 @@ app.use(notFoundHandler);
 // Middleware de tratamento de erros
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-    console.log(`Servidor do Departamento de Polícia rodando em localhost:${PORT}`);
-});
+// Verificar conexão com banco antes de iniciar servidor
+const db = require('./db/db');
+
+async function startServer() {
+    try {
+        // Testar conexão com banco
+        await db.raw('SELECT 1');
+        console.log('✅ Conexão com banco estabelecida');
+        
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Servidor do Departamento de Polícia rodando em localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('❌ Erro ao conectar com banco:', error.message);
+        process.exit(1);
+    }
+}
+
+startServer();
