@@ -74,7 +74,7 @@ async function createCaso(req, res) {
             });
         }
         
-        const { titulo, descricao, agente_id } = req.body;
+        const { titulo, descricao, agente_id, status = 'aberto' } = req.body;
         
         // Validar se o agente existe
         const agente = await agentesRepository.findById(agente_id);
@@ -87,7 +87,8 @@ async function createCaso(req, res) {
         const novoCaso = await casosRepository.create({
             titulo,
             descricao,
-            agente_id
+            agente_id,
+            status
         });
         
         res.status(201).json(novoCaso);
