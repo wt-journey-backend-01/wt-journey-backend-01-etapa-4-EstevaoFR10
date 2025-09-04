@@ -51,16 +51,21 @@ async function getAllAgentes(req, res) {
 
 async function getAgenteById(req, res) {
     try {
-        const { id } = req.params;
-        const agente = await agentesRepository.findById(id);
-
-        if (!agente) {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id) || id <= 0) {
             return res.status(404).json({
                 status: 404,
                 message: 'Agente não encontrado'
             });
         }
-
+        const agente = await agentesRepository.findById(id);
+        if (!agente) {
+            
+            return res.status(404).json({
+                status: 404,
+                message: 'Agente não encontrado'
+            });
+        }
         res.status(200).json(agente);
     } catch (error) {
         res.status(500).json({
@@ -69,9 +74,7 @@ async function getAgenteById(req, res) {
             error: error.message
         });
     }
-}
-
-async function createAgente(req, res) {
+}async function createAgente(req, res) {
     try {
         const dadosAgente = req.body;
 
@@ -247,8 +250,14 @@ async function updateAgente(req, res) {
 
         // Validação extremamente rigorosa - qualquer formato incorreto = 400
         // Verificar se o body está vazio ou tem formato inválido
-        if (!dadosAgente || typeof dadosAgente !== 'object' || Array.isArray(dadosAgente)) {
-            return res.status(400).send();
+        if (!dadosAgente || typeof dadosAgente !== 'object' || Array.isArray(dadosAgente) || Object.keys(dadosAgente).length === 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    payload: "O corpo da requisição não pode ser vazio"
+                }
+            });
         }
 
         // Verificar cada campo individualmente com validação extrema
@@ -257,17 +266,35 @@ async function updateAgente(req, res) {
 
             // Se não é um campo permitido
             if (!['nome', 'dataDeIncorporacao', 'cargo'].includes(campo)) {
-                return res.status(400).send();
+                return res.status(400).json({
+                    status: 400,
+                    message: "Parâmetros inválidos",
+                    errors: {
+                        [campo]: `Campo '${campo}' não é permitido`
+                    }
+                });
             }
 
             // Se o valor não é string, null ou undefined
             if (valor !== null && valor !== undefined && typeof valor !== 'string') {
-                return res.status(400).send();
+                return res.status(400).json({
+                    status: 400,
+                    message: "Parâmetros inválidos",
+                    errors: {
+                        [campo]: `Campo '${campo}' deve ser uma string`
+                    }
+                });
             }
 
             // Se é string vazia em campo obrigatório (para PUT)
             if (campo === 'nome' && valor === '') {
-                return res.status(400).send();
+                return res.status(400).json({
+                    status: 400,
+                    message: "Parâmetros inválidos",
+                    errors: {
+                        nome: "Campo 'nome' não pode ser vazio"
+                    }
+                });
             }
         }
 

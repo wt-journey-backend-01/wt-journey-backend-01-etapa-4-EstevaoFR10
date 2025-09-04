@@ -7,7 +7,6 @@ const agentesRoutes = require('./routes/agentesRoutes');
 const casosRoutes = require('./routes/casosRoutes');
 const authRoutes = require('./routes/authRoutes');
 const usersRoutes = require('./routes/usersRoutes');
-const usuariosRoutes = require('./routes/usuariosRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,7 +37,6 @@ app.use('/agentes', agentesRoutes);
 app.use('/casos', casosRoutes);
 app.use('/auth', authRoutes);
 app.use('/users', usersRoutes);
-app.use('/usuarios', usuariosRoutes);
 
 // Middleware para rotas não encontradas
 app.use(notFoundHandler);

@@ -27,17 +27,8 @@ async function getAllCasos(req, res) {
             });
         }
 
-        let casos;
-
-        if (agente_id) {
-            casos = await casosRepository.findByAgenteId(agente_id);
-        } else if (status) {
-            casos = await casosRepository.findByStatus(status);
-        } else if (q) {
-            casos = await casosRepository.search(q);
-        } else {
-            casos = await casosRepository.findAll();
-        }
+        // Suporte a filtros múltiplos combinados
+        const casos = await casosRepository.findWithFilters({ agente_id, status, q });
 
         res.status(200).json(casos);
     } catch (error) {
@@ -51,16 +42,20 @@ async function getAllCasos(req, res) {
 
 async function getCasoById(req, res) {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id) || id <= 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Caso não encontrado'
+            });
+        }
         const caso = await casosRepository.findById(id);
-
         if (!caso) {
             return res.status(404).json({
                 status: 404,
                 message: 'Caso não encontrado'
             });
         }
-
         res.status(200).json(caso);
     } catch (error) {
         res.status(500).json({
@@ -195,12 +190,9 @@ async function updateCasoPUT(req, res) {
         // Verificar se agente existe
         const agente = await agentesRepository.findById(dadosCaso.agente_id);
         if (!agente) {
-            return res.status(400).json({
-                status: 400,
-                message: "Parâmetros inválidos",
-                errors: {
-                    agente_id: "Agente especificado não existe"
-                }
+            return res.status(404).json({
+                status: 404,
+                message: "Agente não encontrado"
             });
         }
         
@@ -239,8 +231,14 @@ async function updateCasoPUT(req, res) {
 
         // Validação extremamente rigorosa para payload inválido
         // Verificar se o body está vazio ou tem formato inválido
-        if (!dadosCaso || typeof dadosCaso !== 'object' || Array.isArray(dadosCaso)) {
-            return res.status(400).send();
+        if (!dadosCaso || typeof dadosCaso !== 'object' || Array.isArray(dadosCaso) || Object.keys(dadosCaso).length === 0) {
+            return res.status(400).json({
+                status: 400,
+                message: "Parâmetros inválidos",
+                errors: {
+                    payload: "O corpo da requisição não pode ser vazio"
+                }
+            });
         }
 
         // Verificar cada campo individualmente com validação extrema
@@ -249,12 +247,24 @@ async function updateCasoPUT(req, res) {
 
             // Se não é um campo permitido
             if (!['titulo', 'descricao', 'status', 'agente_id'].includes(campo)) {
-                return res.status(400).send();
+                return res.status(400).json({
+                    status: 400,
+                    message: "Parâmetros inválidos",
+                    errors: {
+                        [campo]: `Campo '${campo}' não é permitido`
+                    }
+                });
             }
 
             // Se o valor não é string, null ou undefined
             if (valor !== null && valor !== undefined && typeof valor !== 'string') {
-                return res.status(400).send();
+                return res.status(400).json({
+                    status: 400,
+                    message: "Parâmetros inválidos",
+                    errors: {
+                        [campo]: `Campo '${campo}' deve ser uma string`
+                    }
+                });
             }
         }
 
@@ -273,12 +283,9 @@ async function updateCasoPUT(req, res) {
         if (dadosCaso.agente_id) {
             const agente = await agentesRepository.findById(dadosCaso.agente_id);
             if (!agente) {
-                return res.status(400).json({
-                    status: 400,
-                    message: "Parâmetros inválidos",
-                    errors: {
-                        agente_id: "Agente especificado não existe"
-                    }
+                return res.status(404).json({
+                    status: 404,
+                    message: "Agente não encontrado"
                 });
             }
         }

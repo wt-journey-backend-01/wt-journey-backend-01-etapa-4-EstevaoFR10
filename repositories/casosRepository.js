@@ -64,6 +64,31 @@ async function search(query) {
         });
 }
 
+async function findWithFilters({ agente_id, status, q }) {
+    let query = db('casos')
+        .select('casos.*', 'agentes.nome as agente_nome')
+        .leftJoin('agentes', 'casos.agente_id', 'agentes.id');
+
+    // Aplicar filtros de forma combinada
+    if (agente_id) {
+        query = query.where('casos.agente_id', agente_id);
+    }
+    
+    if (status) {
+        query = query.where('casos.status', status);
+    }
+    
+    if (q) {
+        const searchTerm = `%${q.toLowerCase()}%`;
+        query = query.where(function() {
+            this.whereRaw('LOWER(casos.titulo) LIKE ?', [searchTerm])
+                .orWhereRaw('LOWER(casos.descricao) LIKE ?', [searchTerm]);
+        });
+    }
+
+    return await query;
+}
+
 module.exports = {
     findAll,
     findById,
@@ -72,7 +97,8 @@ module.exports = {
     deleteById,
     findByAgenteId,
     findByStatus,
-    search
+    search,
+    findWithFilters
 };
 
 

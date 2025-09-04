@@ -3,6 +3,15 @@ const jwt = require('jsonwebtoken');
 const usuariosRepository = require('../repositories/usuariosRepository');
 
 class AuthController {
+    // Endpoint /usuarios/me
+    async me(req, res) {
+        if (!req.user) {
+            return res.status(401).json({ erro: 'Não autenticado' });
+        }
+        // Retorna apenas dados públicos
+        const { id, nome, email } = req.user;
+        res.status(200).json({ id, nome, email });
+    }
     // Registrar novo usuário
     async register(req, res) {
         try {
@@ -154,34 +163,25 @@ class AuthController {
     // Deletar usuário
     async deleteUser(req, res) {
         try {
-            const { id } = req.params;
-            
+            const id = parseInt(req.params.id, 10);
+            if (isNaN(id)) {
+                return res.status(404).json({ erro: 'Usuário não encontrado' });
+            }
             // Verificar se o usuário existe
             const usuario = await usuariosRepository.buscarPorId(id);
             if (!usuario) {
-                return res.status(404).json({
-                    erro: 'Usuário não encontrado'
-                });
+                return res.status(404).json({ erro: 'Usuário não encontrado' });
             }
-            
             // Deletar usuário
             const deletado = await usuariosRepository.deletar(id);
-            
             if (deletado) {
-                res.status(200).json({
-                    message: 'Usuário deletado com sucesso'
-                });
+                return res.status(204).send();
             } else {
-                res.status(500).json({
-                    erro: 'Erro ao deletar usuário'
-                });
+                res.status(500).json({ erro: 'Erro ao deletar usuário' });
             }
-            
         } catch (error) {
             console.error('Erro ao deletar usuário:', error);
-            res.status(500).json({
-                erro: 'Erro interno do servidor'
-            });
+            res.status(500).json({ erro: 'Erro interno do servidor' });
         }
     }
 }
