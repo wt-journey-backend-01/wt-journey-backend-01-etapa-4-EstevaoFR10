@@ -6,7 +6,6 @@ const { errorHandler, notFoundHandler } = require('./utils/errorHandler');
 const agentesRoutes = require('./routes/agentesRoutes');
 const casosRoutes = require('./routes/casosRoutes');
 const authRoutes = require('./routes/authRoutes');
-const usersRoutes = require('./routes/usersRoutes');
 const authMiddleware = require('./middlewares/authMiddleware');
 const authController = require('./controllers/authController');
 
@@ -37,7 +36,6 @@ app.get('/', (req, res) => {
 app.use('/agentes', agentesRoutes);
 app.use('/casos', casosRoutes);
 app.use('/auth', authRoutes);
-app.use('/users', usersRoutes);
 
 // Rota específica para /usuarios/me
 app.get('/usuarios/me', authMiddleware, authController.me);

@@ -1,41 +1,12 @@
 const casosRepository = require("../repositories/casosRepository");
 const agentesRepository = require("../repositories/agentesRepository");
-const { validarPayloadCaso } = require("../utils/validators");
 
 async function getAllCasos(req, res) {
     try {
-        const { status, agente_id } = req.query;
-        
-        let casos;
-        if (status || agente_id) {
-            // Validar status se fornecido
-            if (status && !['aberto', 'solucionado'].includes(status)) {
-                return res.status(400).json({
-                    message: 'Campo status deve ser "aberto" ou "solucionado"'
-                });
-            }
-            
-            // Validar agente_id se fornecido
-            if (agente_id) {
-                const id = parseInt(agente_id, 10);
-                if (isNaN(id) || id <= 0) {
-                    return res.status(400).json({
-                        message: 'agente_id deve ser um número válido'
-                    });
-                }
-            }
-            
-            casos = await casosRepository.findWithFilters({ status, agente_id });
-        } else {
-            casos = await casosRepository.findAll();
-        }
-        
+        const casos = await casosRepository.findAll();
         res.status(200).json(casos);
     } catch (error) {
-        res.status(500).json({
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
+        res.status(500).end();
     }
 }
 
@@ -43,60 +14,43 @@ async function getCasoById(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id) || id <= 0) {
-            return res.status(400).json({
-                message: 'ID inválido'
-            });
+            return res.status(400).end();
         }
         
         const caso = await casosRepository.findById(id);
         if (!caso) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
-            });
+            return res.status(404).end();
         }
         
         res.status(200).json(caso);
     } catch (error) {
-        res.status(500).json({
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
+        res.status(500).end();
     }
 }
 
 async function createCaso(req, res) {
     try {
-        // Validar payload
-        const erroValidacao = validarPayloadCaso(req.body, 'POST');
-        if (erroValidacao) {
-            return res.status(400).json({
-                message: erroValidacao
-            });
+        const { titulo, descricao, agente_id } = req.body;
+        
+        if (!titulo || !descricao || !agente_id) {
+            return res.status(400).end();
         }
         
-        const { titulo, descricao, agente_id, status = 'aberto' } = req.body;
-        
-        // Validar se o agente existe
         const agente = await agentesRepository.findById(agente_id);
         if (!agente) {
-            return res.status(404).json({
-                message: 'Agente não encontrado'
-            });
+            return res.status(404).end();
         }
         
         const novoCaso = await casosRepository.create({
             titulo,
             descricao,
             agente_id,
-            status
+            status: 'aberto'
         });
         
         res.status(201).json(novoCaso);
     } catch (error) {
-        res.status(500).json({
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
+        res.status(500).end();
     }
 }
 
@@ -104,42 +58,17 @@ async function updateCaso(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id) || id <= 0) {
-            return res.status(400).json({
-                message: 'ID inválido'
-            });
-        }
-        
-        // Validar payload para PATCH
-        const erroValidacao = validarPayloadCaso(req.body, 'PATCH');
-        if (erroValidacao) {
-            return res.status(400).json({
-                message: erroValidacao
-            });
-        }
-        
-        // Se está tentando atualizar agente_id, validar se existe
-        if (req.body.agente_id) {
-            const agente = await agentesRepository.findById(req.body.agente_id);
-            if (!agente) {
-                return res.status(404).json({
-                    message: 'Agente não encontrado'
-                });
-            }
+            return res.status(400).end();
         }
         
         const casoAtualizado = await casosRepository.update(id, req.body);
         if (!casoAtualizado) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
-            });
+            return res.status(404).end();
         }
         
         res.status(200).json(casoAtualizado);
     } catch (error) {
-        res.status(500).json({
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
+        res.status(500).end();
     }
 }
 
@@ -147,42 +76,28 @@ async function updateCasoPUT(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id) || id <= 0) {
-            return res.status(400).json({
-                message: 'ID inválido'
-            });
+            return res.status(400).end();
         }
         
-        // Validar payload para PUT
-        const erroValidacao = validarPayloadCaso(req.body, 'PUT');
-        if (erroValidacao) {
-            return res.status(400).json({
-                message: erroValidacao
-            });
+        const { titulo, descricao, agente_id } = req.body;
+        
+        if (!titulo || !descricao || !agente_id) {
+            return res.status(400).end();
         }
         
-        const { agente_id } = req.body;
-        
-        // Validar se o agente existe
         const agente = await agentesRepository.findById(agente_id);
         if (!agente) {
-            return res.status(404).json({
-                message: 'Agente não encontrado'
-            });
+            return res.status(404).end();
         }
         
         const casoAtualizado = await casosRepository.update(id, req.body);
         if (!casoAtualizado) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
-            });
+            return res.status(404).end();
         }
         
         res.status(200).json(casoAtualizado);
     } catch (error) {
-        res.status(500).json({
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
+        res.status(500).end();
     }
 }
 
@@ -190,24 +105,17 @@ async function deleteCaso(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id) || id <= 0) {
-            return res.status(400).json({
-                message: 'ID inválido'
-            });
+            return res.status(400).end();
         }
         
         const deletado = await casosRepository.deleteById(id);
         if (!deletado) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
-            });
+            return res.status(404).end();
         }
         
-        res.status(204).send();
+        res.status(204).end();
     } catch (error) {
-        res.status(500).json({
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
+        res.status(500).end();
     }
 }
 
@@ -215,31 +123,22 @@ async function getAgenteDoCaso(req, res) {
     try {
         const casoId = parseInt(req.params.caso_id, 10);
         if (isNaN(casoId) || casoId <= 0) {
-            return res.status(400).json({
-                message: 'ID de caso inválido'
-            });
+            return res.status(400).end();
         }
 
         const caso = await casosRepository.findById(casoId);
         if (!caso) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
-            });
+            return res.status(404).end();
         }
 
         const agente = await agentesRepository.findById(caso.agente_id);
         if (!agente) {
-            return res.status(404).json({
-                message: 'Agente responsável não encontrado'
-            });
+            return res.status(404).end();
         }
 
         res.status(200).json(agente);
     } catch (error) {
-        res.status(500).json({
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
+        res.status(500).end();
     }
 }
 

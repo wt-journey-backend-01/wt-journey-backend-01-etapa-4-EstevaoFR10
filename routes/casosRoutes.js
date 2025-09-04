@@ -5,7 +5,6 @@ const authMiddleware = require('../middlewares/authMiddleware');
 
 // Rotas protegidas para casos
 router.get('/', authMiddleware, casosController.getAllCasos);
-router.get('/:caso_id/agente', authMiddleware, casosController.getAgenteDoCaso);
 router.get('/:id', authMiddleware, casosController.getCasoById);
 router.post('/', authMiddleware, casosController.createCaso);
 router.put('/:id', authMiddleware, casosController.updateCasoPUT);

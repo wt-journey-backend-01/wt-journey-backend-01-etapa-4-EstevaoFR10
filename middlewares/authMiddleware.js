@@ -6,18 +6,14 @@ const authMiddleware = (req, res, next) => {
         const authHeader = req.headers.authorization;
         
         if (!authHeader) {
-            return res.status(401).json({ 
-                message: 'Token de acesso requerido' 
-            });
+            return res.status(401).end();
         }
         
         // Verificar se o formato é "Bearer token"
         const token = authHeader.split(' ')[1];
         
         if (!token) {
-            return res.status(401).json({ 
-                message: 'Formato de token inválido' 
-            });
+            return res.status(401).end();
         }
         
         // Verificar se o JWT é válido
@@ -28,9 +24,7 @@ const authMiddleware = (req, res, next) => {
         
         next();
     } catch (error) {
-        return res.status(401).json({ 
-            message: 'Token inválido' 
-        });
+        return res.status(401).end();
     }
 };
 

@@ -10,25 +10,19 @@ class AuthController {
             
             // Validações básicas
             if (!nome || !email || !senha) {
-                return res.status(400).json({
-                    message: 'Nome, email e senha são obrigatórios'
-                });
+                return res.status(400).end();
             }
             
             // Validação de senha (mín. 8 chars, 1 minúscula, 1 maiúscula, 1 número, 1 especial)
             const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
             if (!senhaRegex.test(senha)) {
-                return res.status(400).json({
-                    message: 'A senha deve ter no mínimo 8 caracteres, incluindo pelo menos uma letra minúscula, uma maiúscula, um número e um caractere especial'
-                });
+                return res.status(400).end();
             }
             
             // Verificar se o email já existe
             const usuarioExistente = await usuariosRepository.buscarPorEmail(email);
             if (usuarioExistente) {
-                return res.status(400).json({
-                    message: 'Email já está em uso'
-                });
+                return res.status(400).end();
             }
             
             // Hash da senha
@@ -56,14 +50,10 @@ class AuthController {
             
             // Capturar erro específico de email duplicado
             if (error.message.includes('Email já está em uso')) {
-                return res.status(400).json({
-                    message: 'Email já está em uso'
-                });
+                return res.status(400).end();
             }
             
-            res.status(500).json({
-                message: 'Erro interno do servidor'
-            });
+            res.status(500).end();
         }
     }
     
@@ -74,25 +64,19 @@ class AuthController {
             
             // Validações básicas
             if (!email || !senha) {
-                return res.status(400).json({
-                    message: 'Email e senha são obrigatórios'
-                });
+                return res.status(400).end();
             }
             
             // Buscar usuário por email
             const usuario = await usuariosRepository.buscarPorEmail(email);
             if (!usuario) {
-                return res.status(401).json({
-                    message: 'Credenciais inválidas'
-                });
+                return res.status(401).end();
             }
             
             // Verificar senha
             const senhaValida = await bcrypt.compare(senha, usuario.senha);
             if (!senhaValida) {
-                return res.status(401).json({
-                    message: 'Credenciais inválidas'
-                });
+                return res.status(401).end();
             }
             
             // Gerar JWT (access token) - conforme especificado no README
@@ -112,9 +96,7 @@ class AuthController {
             
         } catch (error) {
             console.error('Erro no login:', error);
-            res.status(500).json({
-                message: 'Erro interno do servidor'
-            });
+            res.status(500).end();
         }
     }
     
