@@ -2,28 +2,14 @@
 
 # 🧪 Relatório de Avaliação – Journey Levty Etapa 1 - EstevaoFR10
 
-**Data:** 04/09/2025 17:39
+**Data:** 04/09/2025 18:01
 
-**Nota Final:** `39.80/100`
+**Nota Final:** `52.05/100`
 **Status:** ❌ Reprovado
 
 ---
 ## ✅ Requisitos Obrigatórios
-- Foram encontrados `41` problemas nos requisitos obrigatórios. Veja abaixo os testes que falharam:
-  - ⚠️ **Falhou no teste**: `USERS: Recebe erro 400 ao tentar criar um usuário com senha curta de mais`
-    - **Melhoria sugerida**: Nenhuma sugestão de melhoria disponível.
-  - ⚠️ **Falhou no teste**: `USERS: Recebe erro 400 ao tentar criar um usuário com senha sem números`
-    - **Melhoria sugerida**: Nenhuma sugestão de melhoria disponível.
-  - ⚠️ **Falhou no teste**: `USERS: Recebe erro 400 ao tentar criar um usuário com senha sem caractere especial`
-    - **Melhoria sugerida**: Nenhuma sugestão de melhoria disponível.
-  - ⚠️ **Falhou no teste**: `USERS: Recebe erro 400 ao tentar criar um usuário com senha sem letra maiúscula`
-    - **Melhoria sugerida**: Nenhuma sugestão de melhoria disponível.
-  - ⚠️ **Falhou no teste**: `USERS: Recebe erro 400 ao tentar criar um usuário com senha sem letras`
-    - **Melhoria sugerida**: Nenhuma sugestão de melhoria disponível.
-  - ⚠️ **Falhou no teste**: `USERS: Recebe erro 400 ao tentar criar um usuário com e-mail já em uso`
-    - **Melhoria sugerida**: Nenhuma sugestão de melhoria disponível.
-  - ⚠️ **Falhou no teste**: `USERS: Recebe erro 400 ao tentar criar um usuário com campo extra`
-    - **Melhoria sugerida**: Nenhuma sugestão de melhoria disponível.
+- Foram encontrados `34` problemas nos requisitos obrigatórios. Veja abaixo os testes que falharam:
   - ⚠️ **Falhou no teste**: `AGENTS: Cria agentes corretamente com status code 201 e os dados inalterados do agente mais seu ID`
     - **Melhoria sugerida**: Nenhuma sugestão de melhoria disponível.
   - ⚠️ **Falhou no teste**: `AGENTS: Lista todos os agente corretamente com status code 200 e todos os dados de cada agente listados corretamente`
