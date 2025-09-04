@@ -49,23 +49,9 @@ app.use(errorHandler);
 // Verificar conexão com banco antes de iniciar servidor
 const db = require('./db/db');
 
-async function startServer() {
-    try {
-        // Testar conexão com banco
-        await db.raw('SELECT 1');
-        console.log('✅ Conexão com banco estabelecida');
-        
-        app.listen(PORT, '127.0.0.0', () => {
-            console.log(`Servidor do Departamento de Polícia rodando em localhost:${PORT}`);
-        });
-    } catch (error) {
-        console.error('❌ Erro ao conectar com banco:', error.message);
-        process.exit(1);
-    }
-}
 
-//startServer();
 
-app.listen(PORT, '127.0.0.1', () => {
-    console.log(`Servidor do Departamento de Polícia rodando em localhost:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Servidor do Departamento de Polícia rodando em http://localhost:${PORT}`);
+    console.log(`Documentação disponível em http://localhost:${PORT}/docs`);
 });
