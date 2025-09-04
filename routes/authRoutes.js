@@ -10,7 +10,10 @@ router.post('/register', authController.register);
 // Rota para login de usuário
 router.post('/login', authController.login);
 
-// Rota para logout de usuário
+// Rota para logout de usuário (POST conforme README)
 router.post('/logout', authController.logout);
+
+// Rota para logout de usuário (DELETE para compatibilidade com testes)
+router.delete('/logout', authController.logout);
 
 module.exports = router;

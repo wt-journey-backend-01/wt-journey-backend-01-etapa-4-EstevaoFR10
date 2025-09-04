@@ -24,8 +24,7 @@ class AuthController {
                 return res.status(400).end();
             }
             
-            // Validações de senha (comentadas para permitir penalty tests)
-            /*
+            // Validações de senha
             if (senha.length < 8) {
                 return res.status(400).end();
             }
@@ -45,23 +44,20 @@ class AuthController {
             if (!/[a-zA-Z]/.test(senha)) {
                 return res.status(400).end();
             }
-            */
             
-            // Verificar se email já existe (comentado para permitir penalty tests)
-            /*
+            // Verificar se email já existe
             const usuarioExistente = await usuariosRepository.buscarPorEmail(email);
             if (usuarioExistente) {
                 return res.status(400).end();
             }
-            */
             
-            // Verificar campos extras (comentado para permitir penalty tests)
-            // const camposPermitidos = ['nome', 'email', 'senha'];
-            // const camposRecebidos = Object.keys(req.body);
-            // const camposExtras = camposRecebidos.filter(campo => !camposPermitidos.includes(campo));
-            // if (camposExtras.length > 0) {
-            //     return res.status(400).end();
-            // }
+            // Verificar campos extras
+            const camposPermitidos = ['nome', 'email', 'senha'];
+            const camposRecebidos = Object.keys(req.body);
+            const camposExtras = camposRecebidos.filter(campo => !camposPermitidos.includes(campo));
+            if (camposExtras.length > 0) {
+                return res.status(400).end();
+            }
             
             // Hash da senha
             const saltRounds = 10;
@@ -109,12 +105,13 @@ class AuthController {
             }
             
             // Gerar JWT (access token) - conforme especificado no README
+            const jwtSecret = process.env.JWT_SECRET || process.env.INPUT_JWT_SECRET;
             const accessToken = jwt.sign(
                 {
                     id: usuario.id,
                     email: usuario.email
                 },
-                process.env.JWT_SECRET,
+                jwtSecret,
                 { expiresIn: '1d' }
             );
             
@@ -130,9 +127,7 @@ class AuthController {
     
     // Logout (simples - apenas retorna sucesso)
     async logout(req, res) {
-        res.status(200).json({
-            message: 'Logout realizado com sucesso'
-        });
+        res.status(200).end();
     }
     
     // Retornar dados do usuário logado
