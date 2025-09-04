@@ -1,6 +1,35 @@
 const casosRepository = require("../repositories/casosRepository");
 const agentesRepository = require("../repositories/agentesRepository");
 
+// Função para validar payload de caso
+function validarPayloadCaso(body, metodo = 'POST') {
+    const camposValidos = ['titulo', 'descricao', 'agente_id', 'status'];
+    const camposRecebidos = Object.keys(body);
+    
+    // Verificar se há campos extras
+    const camposExtras = camposRecebidos.filter(campo => !camposValidos.includes(campo));
+    if (camposExtras.length > 0) {
+        return `Campos inválidos: ${camposExtras.join(', ')}`;
+    }
+    
+    // Para POST e PUT, campos obrigatórios
+    if (metodo === 'POST' || metodo === 'PUT') {
+        const camposObrigatorios = ['titulo', 'descricao', 'agente_id'];
+        for (const campo of camposObrigatorios) {
+            if (!body[campo]) {
+                return `Campo obrigatório faltando: ${campo}`;
+            }
+        }
+    }
+    
+    // Validar status se fornecido
+    if (body.status && !['aberto', 'solucionado'].includes(body.status)) {
+        return 'Campo status deve ser "aberto" ou "solucionado"';
+    }
+    
+    return null; // tudo ok
+}
+
 async function getAllCasos(req, res) {
     try {
         const casos = await casosRepository.findAll();
@@ -16,9 +45,9 @@ async function getAllCasos(req, res) {
 async function getCasoById(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({
+                message: 'ID inválido'
             });
         }
         
@@ -40,13 +69,15 @@ async function getCasoById(req, res) {
 
 async function createCaso(req, res) {
     try {
-        const { titulo, descricao, agente_id } = req.body;
-        
-        if (!titulo || !descricao || !agente_id) {
+        // Validar payload
+        const erroValidacao = validarPayloadCaso(req.body, 'POST');
+        if (erroValidacao) {
             return res.status(400).json({
-                message: 'Titulo, descricao e agente_id são obrigatórios'
+                message: erroValidacao
             });
         }
+        
+        const { titulo, descricao, agente_id } = req.body;
         
         // Validar se o agente existe
         const agente = await agentesRepository.findById(agente_id);
@@ -74,10 +105,28 @@ async function createCaso(req, res) {
 async function updateCaso(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({
+                message: 'ID inválido'
             });
+        }
+        
+        // Validar payload para PATCH
+        const erroValidacao = validarPayloadCaso(req.body, 'PATCH');
+        if (erroValidacao) {
+            return res.status(400).json({
+                message: erroValidacao
+            });
+        }
+        
+        // Se está tentando atualizar agente_id, validar se existe
+        if (req.body.agente_id) {
+            const agente = await agentesRepository.findById(req.body.agente_id);
+            if (!agente) {
+                return res.status(404).json({
+                    message: 'Agente não encontrado'
+                });
+            }
         }
         
         const casoAtualizado = await casosRepository.update(id, req.body);
@@ -99,20 +148,21 @@ async function updateCaso(req, res) {
 async function updateCasoPUT(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
-            });
-        }
-        
-        const { titulo, descricao, agente_id } = req.body;
-        
-        // PUT exige todos os campos obrigatórios
-        if (!titulo || !descricao || !agente_id) {
+        if (isNaN(id) || id <= 0) {
             return res.status(400).json({
-                message: 'Titulo, descricao e agente_id são obrigatórios'
+                message: 'ID inválido'
             });
         }
+        
+        // Validar payload para PUT
+        const erroValidacao = validarPayloadCaso(req.body, 'PUT');
+        if (erroValidacao) {
+            return res.status(400).json({
+                message: erroValidacao
+            });
+        }
+        
+        const { agente_id } = req.body;
         
         // Validar se o agente existe
         const agente = await agentesRepository.findById(agente_id);
@@ -141,9 +191,9 @@ async function updateCasoPUT(req, res) {
 async function deleteCaso(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-            return res.status(404).json({
-                message: 'Caso não encontrado'
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({
+                message: 'ID inválido'
             });
         }
         

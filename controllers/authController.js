@@ -107,7 +107,7 @@ class AuthController {
             );
             
             res.status(200).json({
-                acess_token: accessToken  // Note: "acess_token" conforme README (sem "c")
+                access_token: accessToken  // Corrigido: access_token (com "c")
             });
             
         } catch (error) {
@@ -154,9 +154,9 @@ class AuthController {
     async deleteUser(req, res) {
         try {
             const id = parseInt(req.params.id, 10);
-            if (isNaN(id)) {
-                return res.status(404).json({ 
-                    message: 'Usuário não encontrado' 
+            if (isNaN(id) || id <= 0) {
+                return res.status(400).json({ 
+                    message: 'ID inválido' 
                 });
             }
             

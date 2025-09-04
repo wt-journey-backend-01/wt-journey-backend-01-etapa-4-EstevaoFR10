@@ -57,7 +57,7 @@ npm start
 **Resposta de sucesso:**
 ```json
 {
-  "acess_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
