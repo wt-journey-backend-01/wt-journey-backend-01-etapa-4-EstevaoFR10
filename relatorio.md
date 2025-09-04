@@ -1,6 +1,6 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 9 créditos restantes para usar o sistema de feedback AI.
+Você tem 8 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para EstevaoFR10:
 
@@ -8,143 +8,175 @@ Nota final: **52.0/100**
 
 Olá, EstevaoFR10! 👋🚀
 
-Primeiramente, parabéns pelo esforço e pela entrega do seu projeto! 🎉 Você conseguiu implementar várias funcionalidades importantes, especialmente em autenticação, que é um tema que exige bastante atenção e cuidado. Notei que seus testes relacionados a usuários passaram, incluindo criação, login, logout e exclusão de usuários. Isso mostra que você entendeu bem os conceitos de hashing de senha com bcrypt, geração de JWT e controle básico de acesso. Muito bom! 👏
-
-Além disso, você implementou o endpoint `/usuarios/me` para retornar os dados do usuário autenticado, o que é um ótimo bônus e demonstra cuidado com a experiência do usuário e segurança. Isso também foi aprovado! 🌟
+Antes de tudo, parabéns pelo esforço e por ter alcançado uma nota inicial de 52/100 neste desafio super complexo de segurança e autenticação com Node.js, Express e PostgreSQL! 🎉 Você conseguiu implementar corretamente as funcionalidades de usuários, incluindo registro, login, logout e exclusão, e ainda proteger as rotas com JWT, o que já é um grande avanço. Além disso, o middleware de autenticação está bem estruturado e você seguiu a arquitetura MVC, o que mostra maturidade no seu código. 👏
 
 ---
 
-### Agora, vamos conversar sobre os pontos que precisam de atenção para destravar sua nota e fazer seu projeto brilhar ainda mais! 💡
+## 🎯 Pontos Fortes que Merecem Destaque
+
+- **Autenticação de usuários funcionando**: O registro, login, logout e exclusão estão implementados corretamente, passando nos testes básicos.
+- **Middleware de autenticação JWT** implementado com tratamento adequado de erros como token inválido e expirado.
+- **Proteção das rotas de agentes e casos** com o middleware JWT.
+- **Estrutura do projeto organizada** em pastas controllers, repositories, routes, middlewares e utils.
+- **Validações robustas** nos controllers, principalmente para agentes e casos, com mensagens de erro claras.
+- **Uso correto de Knex para consultas e manipulação do banco**.
+- **Documentação no INSTRUCTIONS.md** está bem detalhada, cobrindo registro, login, uso do token e fluxo de autenticação.
+
+Além disso, você também conseguiu passar alguns testes bônus importantes, como:
+
+- Endpoint `/usuarios/me` que retorna os dados do usuário autenticado.
+- Filtragem simples por status e agente_id em casos, além de busca por keywords.
+- Filtros e ordenação em agentes por cargo e data de incorporação.
+
+Isso mostra que você está no caminho certo para entregar uma aplicação segura e funcional! 🌟
 
 ---
 
-## 📋 Testes que Falharam e Análise Raiz
+## ⚠️ Análise dos Testes que Falharam e Causas Raiz
 
-Você teve falha em TODOS os testes base relacionados a **Agentes** e **Casos**, que são a espinha dorsal da aplicação. Isso indica que, embora a autenticação esteja funcionando, o acesso e manipulação dos agentes e casos ainda não estão totalmente corretos. Vamos analisar os principais motivos:
+Agora vamos analisar os testes que falharam (todos relacionados a agentes e casos) para entender os motivos e como corrigir.
 
----
+### 1. **AGENTS: Criação, listagem, busca, atualização e deleção de agentes com status e dados corretos**
 
-### 1. **Falhas em Agentes: Criação, Consulta, Atualização e Exclusão**
+**Sintomas:**  
+Os testes que criam agentes (`POST /agentes`), listam todos, buscam por ID, atualizam (PUT/PATCH) e deletam agentes estão falhando, indicando que esses endpoints não estão funcionando conforme esperado.
 
-Testes que falharam:
+**Possíveis causas identificadas no código:**
 
-- Criar agentes corretamente (201)
-- Listar agentes (200)
-- Buscar agente por ID (200)
-- Atualizar agente (PUT e PATCH) corretamente (200)
-- Deletar agente (204)
-- Receber status 400 para payload incorreto
-- Receber status 404 para agente inexistente ou ID inválido
+- **Falta de validação do ID nos parâmetros das rotas dos agentes:**  
+  No `agentesController.js`, nos métodos que recebem `req.params.id`, você faz `parseInt`, mas não há validação explícita se o ID é um número válido antes de chamar o repositório. Isso pode causar problemas se o ID for inválido (ex: string, negativo).
 
-#### Causa raiz provável:
+- **Possível problema na rota `usersRoutes.js`**:  
+  Você importa `usersRoutes` no `server.js` e usa `app.use('/users', usersRoutes)`, mas o arquivo `usersRoutes.js` não foi enviado. Pode haver inconsistência entre o nome da rota e o controller. Além disso, o endpoint de exclusão de usuários está implementado no `authController.js` e não no `usersRoutes.js`. Isso pode causar conflito ou rota não encontrada.
 
-- **Rotas de agentes protegidas por autenticação:** Você aplicou o middleware `authMiddleware` corretamente nas rotas de agentes, o que é ótimo e passou nos testes de autenticação.  
-- **Problema no parsing ou validação do ID:** Nos controladores, você está convertendo o ID com `parseInt`, mas não parece estar validando se o ID é um número válido antes de chamar o repositório. Isso pode gerar erros silenciosos ou não retornar 404 conforme esperado.
-- **Validação de payload:** Você tem validações muito rigorosas, o que é bom, mas pode estar faltando um tratamento para payloads vazios ou formatos inesperados. Por exemplo, no método PATCH, se o corpo da requisição estiver vazio, o retorno deve ser 400, mas seu código pode estar deixando passar ou enviando status 200 com dados incorretos.
-- **Retorno inconsistente em casos de erro:** Em alguns pontos, você retorna apenas `res.status(400).send()` sem mensagem JSON, o que pode não satisfazer o teste que espera uma estrutura específica de erro.
+- **Middleware de autenticação está correto, mas os testes indicam status 401 para agentes e casos sem token, o que é esperado.**  
+  Isso confirma que o middleware está sendo aplicado, mas não garante que a lógica dos controllers esteja correta.
 
-**Exemplo:**
+- **Possível ausência de validação do ID para atualização e deleção:**  
+  Nos controllers de agentes e casos, você não está validando se o ID passado na URL é um número válido antes de tentar atualizar ou deletar. Isso pode causar erros silenciosos ou falhas não tratadas.
+
+**Exemplo de melhoria para validar o ID no controller:**
 
 ```js
-// No updateAgente (PATCH)
-if (!dadosAgente || typeof dadosAgente !== 'object' || Array.isArray(dadosAgente)) {
-    return res.status(400).send();
-}
-```
-
-Aqui, o teste pode esperar um JSON com mensagem de erro, não um corpo vazio.
-
-#### Como melhorar:
-
-- Valide o ID explicitamente e retorne 404 com mensagem JSON clara se inválido.
-- Sempre envie uma resposta JSON com mensagem e detalhes no erro 400, para facilitar o entendimento do cliente e passar nos testes.
-- Garanta que payloads vazios sejam tratados como erro, e que campos extras ou inválidos retornem erro com mensagens específicas.
-- Teste manualmente com payloads vazios, IDs inválidos e dados incorretos para ver o comportamento.
-
----
-
-### 2. **Falhas em Casos: Criação, Consulta, Atualização e Exclusão**
-
-Testes que falharam:
-
-- Criar caso corretamente (201)
-- Listar casos (200)
-- Buscar caso por ID (200)
-- Atualizar caso (PUT e PATCH) (200)
-- Deletar caso (204)
-- Receber status 400 para payload incorreto
-- Receber status 404 para agente inexistente ou ID inválido
-
-#### Causa raiz provável:
-
-- **Filtro múltiplo não implementado corretamente:** No controller `getAllCasos`, você trata os filtros `agente_id`, `status` e `q` como mutuamente exclusivos (usando if/else if), mas o requisito pede suporte para filtros combinados. Isso pode fazer o teste falhar ao passar múltiplos filtros juntos.
-
-```js
-if (agente_id) {
-    casos = await casosRepository.findByAgenteId(agente_id);
-} else if (status) {
-    casos = await casosRepository.findByStatus(status);
-} else if (q) {
-    casos = await casosRepository.search(q);
-} else {
-    casos = await casosRepository.findAll();
-}
-```
-
-Aqui, se vier mais de um filtro, só o primeiro é aplicado, o que é incorreto.
-
-- **Validação de ID e payload:** Assim como nos agentes, a validação de IDs e payloads precisa ser mais rigorosa e consistente, retornando JSON com mensagens de erro claras.
-- **Validação do agente_id no PUT:** No método `updateCasoPUT`, você retorna 400 se o agente não existir, mas o teste pede 404 para agente inexistente.
-
-```js
-const agente = await agentesRepository.findById(dadosCaso.agente_id);
-if (!agente) {
-    return res.status(400).json({
-        status: 400,
-        message: "Parâmetros inválidos",
-        errors: {
-            agente_id: "Agente especificado não existe"
-        }
+const id = parseInt(req.params.id, 10);
+if (isNaN(id) || id <= 0) {
+    return res.status(404).json({
+        status: 404,
+        message: 'Agente não encontrado'
     });
 }
 ```
 
-Aqui, o correto é retornar 404 Not Found para agente inexistente.
+Você já faz isso em `getAgenteById`, mas falta em `updateAgentePUT`, `updateAgente`, e `deleteAgente`.
 
 ---
 
-### 3. **Estrutura de Diretórios**
+### 2. **AGENTS: Recebe status code 400 ao tentar criar agente com payload em formato incorreto**
 
-Pelo seu arquivo `project_structure.txt`, você tem a pasta `routes/usersRoutes.js` (note o plural "users"), mas no requisito e no código principal, o nome esperado é `routes/usersRoutes.js` (ok), porém no arquivo `server.js` você importa `usersRoutes` e usa `/users` para exclusão de usuário, o que está correto.
+**Sintomas:**  
+O teste espera que, ao enviar um payload inválido para criar um agente, o sistema retorne erro 400 com mensagem clara.
 
-No entanto, no seu projeto, o arquivo `routes/usersRoutes.js` não foi enviado para revisão, então não posso confirmar se ele está implementado corretamente para a exclusão de usuário. Certifique-se de que ele exista e exporte o controlador correto para deletar usuários via DELETE /users/:id.
+**Análise:**  
+Seu código no `createAgente` está validando campos extras e obrigatórios, mas pode estar permitindo payloads com campos extras que não são bloqueados corretamente, ou não está validando se o corpo da requisição é um objeto válido.
 
----
-
-### 4. **Middleware de Autenticação**
-
-Você implementou o middleware `authMiddleware` corretamente e aplicou nas rotas protegidas `/agentes` e `/casos`. Isso está ótimo e foi aprovado nos testes.
-
----
-
-### 5. **Bônus que você conseguiu!**
-
-- Implementou o endpoint `/usuarios/me` para retornar dados do usuário autenticado.
-- Implementou mensagens de erro customizadas para validações de agentes e casos.
-- Implementou filtros básicos para casos e agentes (apesar de não suportar filtros combinados corretamente).
-- Aplicou hashing de senha e validação rigorosa no registro.
-- Gerou JWT com expiração e usou variável de ambiente para segredo.
-
-Parabéns por esses avanços! 🌟
-
----
-
-## ✍️ Sugestões de Código e Ajustes para Melhorar
-
-### Exemplo para validar ID em agentesController.js:
+**Sugestão:**  
+No início da função `createAgente`, valide se o corpo da requisição é um objeto e não está vazio, por exemplo:
 
 ```js
-async function getAgenteById(req, res) {
+if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body) || Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+        status: 400,
+        message: "Parâmetros inválidos",
+        errors: { payload: "O corpo da requisição não pode ser vazio" }
+    });
+}
+```
+
+Isso evita que payloads vazios ou mal formatados passem.
+
+---
+
+### 3. **AGENTS: Recebe status 404 ao tentar buscar, atualizar ou deletar agente com ID inválido ou inexistente**
+
+**Sintomas:**  
+Ao usar IDs inválidos (ex: strings, negativos) ou IDs que não existem, o sistema não retorna corretamente o erro 404.
+
+**Análise:**  
+No método `getAgenteById` você já faz essa validação, mas nos métodos de atualização e deleção falta validar o ID. Isso pode causar falhas ou erros inesperados.
+
+**Correção:**  
+Adicionar validação do ID no início dos métodos `updateAgentePUT`, `updateAgente` e `deleteAgente`, como mostrado acima.
+
+---
+
+### 4. **CASES: Criação, listagem, busca, atualização e deleção de casos com status e dados corretos**
+
+**Sintomas:**  
+Os testes para criação, listagem, busca, atualização e deleção de casos estão falhando, indicando que estes endpoints não estão funcionando perfeitamente.
+
+**Análise e causas:**
+
+- Assim como os agentes, falta validação do ID nos métodos do `casosController.js` para busca, atualização e deleção.
+
+- Na criação e atualização, você valida se o agente existe, mas não valida se o `agente_id` é um número válido antes de fazer a consulta. Isso pode causar erro 500 em vez de 404 ou 400.
+
+- Na atualização parcial (`updateCaso`), a validação de payload está rigorosa, mas não valida se o ID do caso na URL é válido.
+
+- Na exclusão, falta validar se o ID é um número válido.
+
+**Exemplo de validação para o ID do caso:**
+
+```js
+const id = parseInt(req.params.id, 10);
+if (isNaN(id) || id <= 0) {
+    return res.status(404).json({
+        status: 404,
+        message: 'Caso não encontrado'
+    });
+}
+```
+
+---
+
+### 5. **CASES: Recebe status code 400 ou 404 ao criar ou atualizar caso com ID de agente inválido ou inexistente**
+
+**Sintomas:**  
+Ao passar um `agente_id` inválido (não numérico) ou inexistente, o sistema não retorna o erro esperado.
+
+**Análise:**  
+Você verifica se o agente existe, mas não valida o formato do `agente_id` antes da consulta, o que pode gerar erros.
+
+**Sugestão:**  
+Valide o `agente_id` para ser um número inteiro positivo antes de consultar o banco.
+
+---
+
+### 6. **Testes bônus que falharam (filtros, busca, /usuarios/me)**
+
+Você implementou esses recursos, mas os testes indicam que eles não passaram.
+
+**Possível causa:**  
+Faltou implementar a rota `/usuarios/me` no `authRoutes.js` e aplicar o middleware de autenticação para essa rota. No seu `authRoutes.js` só tem `/register`, `/login` e `/logout`.
+
+**Correção:**  
+Adicione no `authRoutes.js`:
+
+```js
+router.get('/usuarios/me', authMiddleware, authController.me);
+```
+
+Ou, se preferir, crie uma rota específica `usuariosRoutes.js` para isso.
+
+---
+
+## 🛠️ Recomendações e Correções Práticas
+
+### A. Validação de IDs em todos os controllers de agentes e casos
+
+Exemplo para `updateAgentePUT`:
+
+```js
+async function updateAgentePUT(req, res) {
     try {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id) || id <= 0) {
@@ -153,134 +185,104 @@ async function getAgenteById(req, res) {
                 message: 'Agente não encontrado'
             });
         }
-        const agente = await agentesRepository.findById(id);
-        if (!agente) {
-            return res.status(404).json({
-                status: 404,
-                message: 'Agente não encontrado'
-            });
-        }
-        res.status(200).json(agente);
+        // resto do código...
     } catch (error) {
-        res.status(500).json({
-            status: 500,
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
+        // tratamento de erro
     }
 }
 ```
 
-### Exemplo para validar payload vazio no PATCH:
+Faça isso para todos os métodos que recebem `req.params.id`.
+
+---
+
+### B. Validação completa do payload no `createAgente` e `createCaso`
+
+Antes de validar campos individuais, verifique se o corpo da requisição é um objeto não vazio:
 
 ```js
-if (!dadosAgente || Object.keys(dadosAgente).length === 0) {
+if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body) || Object.keys(req.body).length === 0) {
     return res.status(400).json({
         status: 400,
         message: "Parâmetros inválidos",
-        errors: {
-            payload: "O corpo da requisição não pode ser vazio"
-        }
+        errors: { payload: "O corpo da requisição não pode ser vazio" }
     });
 }
 ```
 
-### Exemplo para corrigir filtro combinado em casosController.js:
+---
+
+### C. Validação do `agente_id` para casos
+
+Antes de consultar o banco para verificar se o agente existe:
 
 ```js
-async function getAllCasos(req, res) {
-    try {
-        const { agente_id, status, q } = req.query;
-
-        // Validar status se fornecido
-        if (status && !['aberto', 'solucionado'].includes(status)) {
-            return res.status(400).json({
-                status: 400,
-                message: "Parâmetros inválidos",
-                errors: {
-                    status: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'"
-                }
-            });
-        }
-
-        // Validar agente_id se fornecido (deve ser número)
-        if (agente_id && isNaN(parseInt(agente_id))) {
-            return res.status(400).json({
-                status: 400,
-                message: "Parâmetros inválidos",
-                errors: {
-                    agente_id: "O campo 'agente_id' deve ser um número válido"
-                }
-            });
-        }
-
-        // Montar query dinâmica para múltiplos filtros
-        let query = casosRepository.queryBuilder(); // Você precisa criar esse método no repositório para retornar query builder
-
-        if (agente_id) {
-            query = query.where('agente_id', agente_id);
-        }
-        if (status) {
-            query = query.where('status', status);
-        }
-        if (q) {
-            const searchTerm = `%${q.toLowerCase()}%`;
-            query = query.andWhere(function() {
-                this.whereRaw('LOWER(titulo) LIKE ?', [searchTerm])
-                    .orWhereRaw('LOWER(descricao) LIKE ?', [searchTerm]);
-            });
-        }
-
-        const casos = await query.select('casos.*', 'agentes.nome as agente_nome')
-            .leftJoin('agentes', 'casos.agente_id', 'agentes.id');
-
-        res.status(200).json(casos);
-    } catch (error) {
-        res.status(500).json({
-            status: 500,
-            message: 'Erro interno do servidor',
-            error: error.message
-        });
-    }
+const agenteId = parseInt(dadosCaso.agente_id, 10);
+if (isNaN(agenteId) || agenteId <= 0) {
+    return res.status(400).json({
+        status: 400,
+        message: 'Parâmetros inválidos',
+        errors: { agente_id: "O campo 'agente_id' deve ser um número válido" }
+    });
 }
 ```
 
-Se não quiser criar um método `queryBuilder`, você pode construir a query diretamente no controller, usando o `db` do Knex.
+---
+
+### D. Rota `/usuarios/me` e organização das rotas
+
+No seu `authRoutes.js` falta a rota para o endpoint `/usuarios/me` que retorna os dados do usuário autenticado. Essa rota é importante para o bônus.
+
+Adicione:
+
+```js
+const authMiddleware = require('../middlewares/authMiddleware');
+const authController = require('../controllers/authController');
+
+router.get('/usuarios/me', authMiddleware, authController.me);
+```
+
+Além disso, verifique se a rota `/users/:id` está corretamente implementada no `usersRoutes.js` e se está usando o método `deleteUser` do `authController.js`.
 
 ---
 
-## 📚 Recursos para você estudar e aprimorar
+### E. Consistência nos nomes das rotas
 
-- Para melhorar a manipulação de queries com Knex e filtros dinâmicos, recomendo muito este vídeo:  
-  https://www.youtube.com/watch?v=GLwHSs7t3Ns&t=4s
+Você usa `/users` para exclusão de usuários, mas no INSTRUCTIONS.md e controllers chama de `/usuarios`. Mantenha o padrão para evitar confusão.
 
-- Para entender melhor a arquitetura MVC e organização de código, que te ajudará a manter seu projeto limpo e escalável:  
-  https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s
+---
 
-- Para consolidar os conceitos de autenticação, JWT e bcrypt, veja este vídeo feito pelos meus criadores, que explica muito bem esses fundamentos:  
+## 📚 Recursos para Você Aprimorar Ainda Mais
+
+- Para entender melhor sobre autenticação e JWT, recomendo fortemente este vídeo, feito pelos meus criadores, que fala muito bem sobre os conceitos fundamentais:  
+  https://www.youtube.com/watch?v=Q4LQOfYwujk
+
+- Para aprofundar no uso prático de JWT e bcrypt:  
   https://www.youtube.com/watch?v=L04Ln97AwoY
 
-- Para configurar seu ambiente com Docker, Knex e PostgreSQL, caso precise revisar, este vídeo é excelente:  
-  https://www.youtube.com/watch?v=uEABDBQV-Ek&t=1s
+- Para melhorar suas consultas e manipulação do banco com Knex:  
+  https://www.youtube.com/watch?v=GLwHSs7t3Ns&t=4s
+
+- Para organizar seu projeto com MVC e boas práticas:  
+  https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s
 
 ---
 
-## 📝 Resumo dos principais pontos para focar:
+## 📝 Resumo Final - Pontos para Focar e Corrigir
 
-- **Validar IDs recebidos nas rotas (GET, PUT, PATCH, DELETE) e retornar 404 com JSON apropriado para IDs inválidos ou não encontrados.**
-- **Tratar payloads vazios ou inválidos com respostas JSON detalhadas e status 400.**
-- **Corrigir a lógica de filtros combinados em listagens, especialmente em casos, para aplicar múltiplos filtros ao mesmo tempo.**
-- **Revisar mensagens e formatos de erro para garantir consistência e clareza, conforme esperado nos testes.**
-- **Garantir que o endpoint DELETE /users/:id esteja implementado e protegido por autenticação, conforme estrutura do projeto.**
-- **Testar manualmente todas as rotas protegidas com token JWT válido e inválido para garantir segurança e conformidade.**
+- [ ] **Validar IDs (params) em todas as rotas de agentes e casos** para garantir que sejam números válidos e evitar erros inesperados.
+- [ ] **Validar o payload (req.body) para não aceitar objetos vazios ou formatos inválidos** antes de validar campos individuais.
+- [ ] **Validar o formato do `agente_id` em casos antes de consultar o banco**, garantindo que seja um número válido.
+- [ ] **Adicionar a rota `/usuarios/me` no arquivo `authRoutes.js` com middleware de autenticação** para atender ao requisito bônus.
+- [ ] **Revisar a organização das rotas de usuários (`usersRoutes.js`) e garantir que o endpoint DELETE `/users/:id` funcione corretamente** usando o método do controller correto.
+- [ ] **Garantir consistência na nomenclatura das rotas (usar `/usuarios` ou `/users` de forma uniforme).**
+- [ ] **Adicionar tratamento de erros e mensagens claras para casos de IDs inválidos e dados faltantes.**
 
 ---
 
-EstevaoFR10, você está no caminho certo! Seu entendimento sobre autenticação está sólido, e com esses ajustes na manipulação de agentes e casos, seu projeto ficará completo e profissional. Continue praticando, revisando e testando suas rotas — isso é essencial para APIs robustas.
+EstevaoFR10, você está no caminho certo! Com essas correções, sua API vai ficar muito mais robusta, segura e alinhada com os requisitos. Continue firme, revisando cada ponto com calma, e não hesite em usar os recursos que indiquei para aprofundar seus conhecimentos. O mundo da segurança e autenticação é desafiador, mas você está fazendo um ótimo trabalho! 🚀💪
 
-Se precisar de ajuda para implementar os filtros combinados ou validar melhor os dados, me chama aqui! Estou torcendo para você destravar todos os testes e alcançar a nota máxima! 🚀💪
-
-Um forte abraço e continue codando com paixão! 👨‍💻👩‍💻✨
+Se precisar de mais ajuda, estarei por aqui para te apoiar. Avante! 👊😊
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
