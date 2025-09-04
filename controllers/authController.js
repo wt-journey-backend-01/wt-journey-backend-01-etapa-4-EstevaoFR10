@@ -86,7 +86,7 @@ class AuthController {
                     nome: usuario.nome,
                     email: usuario.email
                 },
-                process.env.JWT_SECRET,
+                process.env.JWT_SECRET || "segredo",
                 { expiresIn: '1h' }
             );
             
